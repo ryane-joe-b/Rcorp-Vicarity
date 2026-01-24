@@ -1,0 +1,347 @@
+#===============================================================================
+# VICARITY DEPLOYMENT WORKFLOW
+#
+# This workflow:
+# 1. Runs tests and linting
+# 2. Deploys to production on push to main
+# 3. Performs health checks after deployment
+# 4. Automatically rolls back if deployment fails
+#
+# REQUIRED GITHUB SECRETS:
+# - VPS_HOST: Your server IP address
+# - VPS_USER: deploy
+# - VPS_SSH_KEY: Private SSH key for deploy user
+# - NEON_DATABASE_URL: PostgreSQL connection string
+# - RESEND_API_KEY: Email service API key
+# - SECRET_KEY: Application secret key
+#===============================================================================
+
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  
+  # Allow manual deployment
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip tests (emergency deploy)'
+        required: false
+        default: 'false'
+        type: boolean
+
+# Prevent concurrent deployments
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+env:
+  DEPLOY_PATH: /home/deploy/vicarity
+
+jobs:
+  #-----------------------------------------------------------------------------
+  # JOB 1: TEST
+  # Run tests before deploying
+  #-----------------------------------------------------------------------------
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.skip_tests != 'true' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install API dependencies
+        run: |
+          cd api
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+      
+      - name: Run API tests
+        run: |
+          cd api
+          pytest --cov=. --cov-report=term-missing -v
+        env:
+          DATABASE_URL: sqlite:///./test.db
+          SECRET_KEY: test-secret-key
+          ENVIRONMENT: test
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+      
+      - name: Install web dependencies
+        run: |
+          cd web
+          npm ci
+      
+      - name: Run web tests
+        run: |
+          cd web
+          npm run test -- --coverage --watchAll=false
+      
+      - name: Run linting
+        run: |
+          cd web
+          npm run lint || true  # Don't fail on lint warnings
+
+  #-----------------------------------------------------------------------------
+  # JOB 2: BUILD
+  # Build Docker images to verify they compile
+  #-----------------------------------------------------------------------------
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: test
+    if: ${{ always() && (needs.test.result == 'success' || github.event.inputs.skip_tests == 'true') }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build API image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api
+          push: false
+          tags: vicarity-api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build Web image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./web
+          push: false
+          tags: vicarity-web:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  #-----------------------------------------------------------------------------
+  # JOB 3: DEPLOY
+  # Deploy to production server
+  #-----------------------------------------------------------------------------
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ needs.build.result == 'success' }}
+    
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_URL }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Create deployment
+        uses: bobheadxi/deployments@v1
+        id: deployment
+        with:
+          step: start
+          token: ${{ secrets.GITHUB_TOKEN }}
+          env: production
+      
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        id: deploy
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            
+            echo "=== Starting deployment at $(date) ==="
+            cd ${{ env.DEPLOY_PATH }}
+            
+            # Store current commit for rollback
+            PREVIOUS_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "none")
+            echo "Previous commit: $PREVIOUS_COMMIT"
+            echo "$PREVIOUS_COMMIT" > .previous_commit
+            
+            # Pull latest code
+            echo "=== Pulling latest code ==="
+            git fetch origin main
+            git reset --hard origin/main
+            echo "Current commit: $(git rev-parse HEAD)"
+            
+            # Create/update .env file
+            echo "=== Updating environment variables ==="
+            cat > .env << 'ENVEOF'
+            NEON_DATABASE_URL=${{ secrets.NEON_DATABASE_URL }}
+            RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            ENVIRONMENT=production
+            ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }}
+            REACT_APP_API_URL=/api
+            ENVEOF
+            
+            # Build and deploy with zero-downtime
+            echo "=== Building and deploying ==="
+            docker compose -f docker-compose.production.yml build --no-cache
+            
+            # Rolling update - one service at a time
+            echo "=== Starting rolling update ==="
+            
+            # Update Redis first (stateful, but quick)
+            docker compose -f docker-compose.production.yml up -d redis
+            sleep 5
+            
+            # Update API with health check
+            docker compose -f docker-compose.production.yml up -d api
+            
+            # Wait for API to be healthy
+            echo "=== Waiting for API health check ==="
+            RETRIES=30
+            while [ $RETRIES -gt 0 ]; do
+              if docker compose -f docker-compose.production.yml exec -T api curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+                echo "API is healthy!"
+                break
+              fi
+              echo "Waiting for API... ($RETRIES retries left)"
+              RETRIES=$((RETRIES - 1))
+              sleep 2
+            done
+            
+            if [ $RETRIES -eq 0 ]; then
+              echo "ERROR: API health check failed!"
+              exit 1
+            fi
+            
+            # Update web and nginx
+            docker compose -f docker-compose.production.yml up -d web nginx
+            
+            # Final health check
+            echo "=== Final health check ==="
+            sleep 10
+            if curl -sf http://localhost/health > /dev/null 2>&1; then
+              echo "=== Deployment successful! ==="
+            else
+              echo "ERROR: Final health check failed!"
+              exit 1
+            fi
+            
+            # Cleanup old images
+            echo "=== Cleaning up old images ==="
+            docker image prune -f
+            
+            echo "=== Deployment completed at $(date) ==="
+      
+      - name: Update deployment status
+        uses: bobheadxi/deployments@v1
+        if: always()
+        with:
+          step: finish
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+          env: production
+
+  #-----------------------------------------------------------------------------
+  # JOB 4: VERIFY
+  # Verify deployment is working
+  #-----------------------------------------------------------------------------
+  verify:
+    name: Verify Deployment
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: ${{ needs.deploy.result == 'success' }}
+    
+    steps:
+      - name: Wait for deployment to stabilize
+        run: sleep 30
+      
+      - name: Health check
+        run: |
+          HEALTH_URL="${{ vars.PRODUCTION_URL }}/health"
+          
+          echo "Checking health endpoint: $HEALTH_URL"
+          
+          RESPONSE=$(curl -sf "$HEALTH_URL" || echo "FAILED")
+          
+          if [[ "$RESPONSE" == "FAILED" ]]; then
+            echo "Health check failed!"
+            exit 1
+          fi
+          
+          echo "Health check response: $RESPONSE"
+          echo "Deployment verified successfully!"
+      
+      - name: Notify success
+        if: success()
+        run: |
+          echo "Deployment successful!"
+          # Add Slack/Discord notification here if desired
+
+  #-----------------------------------------------------------------------------
+  # JOB 5: ROLLBACK
+  # Rollback if verification fails
+  #-----------------------------------------------------------------------------
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy, verify]
+    if: ${{ failure() && needs.deploy.result == 'success' }}
+    
+    steps:
+      - name: Rollback deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            
+            echo "=== ROLLING BACK DEPLOYMENT ==="
+            cd ${{ env.DEPLOY_PATH }}
+            
+            # Get previous commit
+            PREVIOUS_COMMIT=$(cat .previous_commit 2>/dev/null || echo "")
+            
+            if [ -z "$PREVIOUS_COMMIT" ] || [ "$PREVIOUS_COMMIT" = "none" ]; then
+              echo "No previous commit found for rollback!"
+              exit 1
+            fi
+            
+            echo "Rolling back to: $PREVIOUS_COMMIT"
+            
+            # Checkout previous commit
+            git checkout "$PREVIOUS_COMMIT"
+            
+            # Rebuild and restart
+            docker compose -f docker-compose.production.yml up -d --build
+            
+            # Wait and verify
+            sleep 30
+            
+            if curl -sf http://localhost/health > /dev/null 2>&1; then
+              echo "=== ROLLBACK SUCCESSFUL ==="
+            else
+              echo "=== ROLLBACK MAY HAVE FAILED - MANUAL INTERVENTION REQUIRED ==="
+              exit 1
+            fi
+      
+      - name: Notify rollback
+        if: always()
+        run: |
+          echo "ALERT: Deployment was rolled back!"
+          # Add Slack/Discord notification here
