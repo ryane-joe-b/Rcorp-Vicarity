@@ -184,14 +184,12 @@ jobs:
             
             # Create/update .env file
             echo "=== Updating environment variables ==="
-            cat > .env << 'ENVEOF'
-            NEON_DATABASE_URL=${{ secrets.NEON_DATABASE_URL }}
-            RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
-            SECRET_KEY=${{ secrets.SECRET_KEY }}
-            ENVIRONMENT=production
-            ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }}
-            REACT_APP_API_URL=/api
-            ENVEOF
+            echo "NEON_DATABASE_URL=${{ secrets.NEON_DATABASE_URL }}" > .env
+            echo "RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}" >> .env
+            echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+            echo "ENVIRONMENT=production" >> .env
+            echo "ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }}" >> .env
+            echo "REACT_APP_API_URL=/api" >> .env
             
             # Build and deploy with zero-downtime
             echo "=== Building and deploying ==="
