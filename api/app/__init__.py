@@ -1,0 +1,1 @@
+# Vicarity API Application
