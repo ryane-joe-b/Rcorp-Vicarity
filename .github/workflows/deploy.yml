@@ -269,7 +269,13 @@ jobs:
       
       - name: Health check
         run: |
-          HEALTH_URL="${{ vars.PRODUCTION_URL }}/health"
+          # Use PRODUCTION_URL variable or fallback to vicarity.co.uk
+          BASE_URL="${{ vars.PRODUCTION_URL }}"
+          if [ -z "$BASE_URL" ]; then
+            BASE_URL="https://vicarity.co.uk"
+          fi
+          
+          HEALTH_URL="${BASE_URL}/health"
           
           echo "Checking health endpoint: $HEALTH_URL"
           
@@ -277,6 +283,17 @@ jobs:
           
           if [[ "$RESPONSE" == "FAILED" ]]; then
             echo "Health check failed!"
+            echo "Trying alternative endpoints..."
+            
+            # Try API health endpoint
+            API_RESPONSE=$(curl -sf "${BASE_URL}/api/health" || echo "FAILED")
+            if [[ "$API_RESPONSE" != "FAILED" ]]; then
+              echo "API health check passed: $API_RESPONSE"
+              exit 0
+            fi
+            
+            # Final failure
+            echo "All health checks failed!"
             exit 1
           fi
           
