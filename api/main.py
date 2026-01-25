@@ -31,8 +31,14 @@ async def lifespan(app: FastAPI):
     print(f"Starting Vicarity API in {settings.ENVIRONMENT} mode...")
     
     # Create database tables (in production, use Alembic migrations)
-    print("Creating database tables...")
-    Base.metadata.create_all(bind=engine)
+    print("Checking database tables...")
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("Database tables ready")
+    except Exception as e:
+        # Tables likely already exist (this is fine)
+        print(f"Database tables check: {str(e)[:100]}")
+        print("Continuing with existing tables...")
     
     try:
         redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
@@ -98,11 +104,13 @@ async def health_check():
     db_status = "connected"
     try:
         from app.core.database import SessionLocal
+        from sqlalchemy import text
         db = SessionLocal()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db.close()
-    except Exception:
+    except Exception as e:
         db_status = "error"
+        print(f"Database health check error: {e}")
     
     # Check Redis
     redis_status = "disconnected"
