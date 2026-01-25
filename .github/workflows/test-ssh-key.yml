@@ -1,0 +1,29 @@
+name: Test SSH Key Format
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check key format
+        run: |
+          echo "Key starts with:"
+          echo "${{ secrets.VPS_SSH_KEY }}" | head -n 1
+          echo ""
+          echo "Key length (characters):"
+          echo "${{ secrets.VPS_SSH_KEY }}" | wc -c
+          echo ""
+          echo "Key line count:"
+          echo "${{ secrets.VPS_SSH_KEY }}" | wc -l
+          echo ""
+          echo "Key ends with:"
+          echo "${{ secrets.VPS_SSH_KEY }}" | tail -n 1
+          
+      - name: Test key can be written to file
+        run: |
+          echo "${{ secrets.VPS_SSH_KEY }}" > /tmp/test_key
+          chmod 600 /tmp/test_key
+          echo "File created, checking if ssh-keygen can read it:"
+          ssh-keygen -l -f /tmp/test_key || echo "Key file is invalid"
