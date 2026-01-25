@@ -14,7 +14,7 @@ def test_root():
     """Test root endpoint returns welcome message."""
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == {"message": "Vicarity API is running"}
+    assert response.json() == {"message": "Vicarity API - Care Worker Marketplace"}
 
 
 def test_health_check():

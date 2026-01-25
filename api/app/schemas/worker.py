@@ -81,5 +81,4 @@ class WorkerProfileResponse(BaseModel):
     hourly_rate_min: Optional[int]
     hourly_rate_max: Optional[int]
     
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}

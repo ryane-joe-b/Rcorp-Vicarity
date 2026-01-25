@@ -22,8 +22,7 @@ class UserResponse(UserBase):
     created_at: datetime
     last_login_at: Optional[datetime] = None
     
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class CurrentUserResponse(BaseModel):
@@ -38,5 +37,4 @@ class CurrentUserResponse(BaseModel):
     worker_profile: Optional[dict] = None
     care_home_profile: Optional[dict] = None
     
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}

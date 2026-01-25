@@ -46,5 +46,4 @@ class CareHomeProfileResponse(BaseModel):
     verification_status: str
     profile_completion_percentage: str
     
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
