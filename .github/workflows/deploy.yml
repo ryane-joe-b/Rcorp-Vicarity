@@ -264,41 +264,54 @@ jobs:
     if: ${{ needs.deploy.result == 'success' }}
     
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+      
+      - name: Add server to known hosts
+        run: ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+      
       - name: Wait for deployment to stabilize
         run: sleep 30
       
       - name: Health check
         run: |
-          # Use PRODUCTION_URL variable or fallback to vicarity.co.uk
-          BASE_URL="${{ vars.PRODUCTION_URL }}"
-          if [ -z "$BASE_URL" ]; then
-            BASE_URL="https://vicarity.co.uk"
-          fi
+          echo "Checking health endpoint via SSH..."
           
-          HEALTH_URL="${BASE_URL}/health"
-          
-          echo "Checking health endpoint: $HEALTH_URL"
-          
-          RESPONSE=$(curl -sf "$HEALTH_URL" || echo "FAILED")
-          
-          if [[ "$RESPONSE" == "FAILED" ]]; then
-            echo "Health check failed!"
-            echo "Trying alternative endpoints..."
+          # Run health check on the server
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'HEALTHCHECK'
+            echo "=== Docker Container Status ==="
+            docker ps --format "table {{.Names}}\t{{.Status}}"
             
-            # Try API health endpoint
-            API_RESPONSE=$(curl -sf "${BASE_URL}/api/health" || echo "FAILED")
-            if [[ "$API_RESPONSE" != "FAILED" ]]; then
-              echo "API health check passed: $API_RESPONSE"
-              exit 0
+            echo ""
+            echo "=== Testing Health Endpoints ==="
+            
+            # Test HTTP health
+            HTTP_HEALTH=$(curl -sf http://localhost/health || echo "FAILED")
+            if [[ "$HTTP_HEALTH" != "FAILED" ]]; then
+              echo "✓ HTTP /health: $HTTP_HEALTH"
+            else
+              echo "✗ HTTP /health failed"
+              exit 1
             fi
             
-            # Final failure
-            echo "All health checks failed!"
-            exit 1
-          fi
-          
-          echo "Health check response: $RESPONSE"
-          echo "Deployment verified successfully!"
+            # Test API health via nginx
+            API_HEALTH=$(curl -sf http://localhost/api/health || echo "FAILED")
+            if [[ "$API_HEALTH" != "FAILED" ]]; then
+              echo "✓ API /api/health: OK"
+              echo "$API_HEALTH" | head -c 100
+            else
+              echo "✗ API /api/health failed"
+              exit 1
+            fi
+            
+            echo ""
+            echo "=== All health checks passed! ==="
+          HEALTHCHECK
       
       - name: Notify success
         if: success()
