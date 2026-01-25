@@ -150,14 +150,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Create deployment
-        uses: bobheadxi/deployments@v1
-        id: deployment
-        with:
-          step: start
-          token: ${{ secrets.GITHUB_TOKEN }}
-          env: production
-      
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         id: deploy
@@ -245,15 +237,13 @@ jobs:
             
             echo "=== Deployment completed at $(date) ==="
       
-      - name: Update deployment status
-        uses: bobheadxi/deployments@v1
-        if: always()
-        with:
-          step: finish
-          token: ${{ secrets.GITHUB_TOKEN }}
-          status: ${{ job.status }}
-          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
-          env: production
+      - name: Deployment status
+        if: success()
+        run: echo "✅ Deployment completed successfully"
+      
+      - name: Deployment failed
+        if: failure()
+        run: echo "❌ Deployment failed - check logs above"
 
   #-----------------------------------------------------------------------------
   # JOB 4: VERIFY
