@@ -8,23 +8,23 @@ Error: Process completed with exit code 255
 
 ## Most Likely Causes & Fixes
 
-### Issue 1: SSH Key Format in GitHub Secrets (BASE64 SOLUTION)
+### Issue 1: SSH Key Format in GitHub Secrets (WEBFACTORY SSH-AGENT SOLUTION)
 
-GitHub Secrets mangles newlines in SSH keys. The solution is to base64 encode the key.
+We're now using the `webfactory/ssh-agent` action which handles SSH keys properly.
 
 **Fix:**
 1. SSH to your server manually
-2. Get the BASE64-encoded private key:
+2. Get the private key:
    ```bash
-   sudo cat /home/deploy/.ssh/id_ed25519 | base64 -w 0
+   sudo cat /home/deploy/.ssh/id_ed25519
    ```
-3. Copy the ENTIRE base64 string (it will be one long line)
+3. Copy the ENTIRE output (including BEGIN/END lines)
 4. Go to GitHub repo → Settings → Secrets → Actions
 5. Edit `VPS_SSH_KEY` secret
-6. Paste the base64 string (no newlines, just the encoded string)
+6. Paste the complete private key
 7. Save
 
-The workflow will automatically decode it with `base64 -d` before using it.
+The webfactory/ssh-agent action will handle the key format correctly.
 
 ### Issue 2: Wrong Public Key on Server
 
