@@ -282,3 +282,30 @@ SEED_QUALIFICATIONS = [
         "display_order": 63,
     },
 ]
+
+
+def seed_qualifications(db):
+    """
+    Seed the qualifications table with standard UK care qualifications.
+    
+    Args:
+        db: SQLAlchemy database session
+    
+    Returns:
+        Number of qualifications seeded
+    """
+    count = 0
+    
+    for qual_data in SEED_QUALIFICATIONS:
+        # Check if qualification already exists
+        existing = db.query(Qualification).filter(
+            Qualification.code == qual_data["code"]
+        ).first()
+        
+        if not existing:
+            qualification = Qualification(**qual_data)
+            db.add(qualification)
+            count += 1
+    
+    db.commit()
+    return count
