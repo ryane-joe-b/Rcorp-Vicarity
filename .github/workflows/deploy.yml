@@ -267,7 +267,7 @@ jobs:
             
             # Remove web-static volume to force fresh build
             echo "=== Removing old web-static volume ==="
-            docker compose -f docker-compose.production.yml down web nginx
+            docker compose -f docker-compose.production.yml stop web nginx
             docker volume rm vicarity_web-static 2>/dev/null || echo "Volume already removed or doesn't exist"
             
             # Build and deploy with zero-downtime
