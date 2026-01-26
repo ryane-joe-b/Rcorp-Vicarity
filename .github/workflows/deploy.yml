@@ -182,8 +182,9 @@ jobs:
           fi
           
           # Check SECRET_KEY length (should be at least 32 chars)
-          if [ ${#{{ secrets.SECRET_KEY }}} -lt 32 ]; then
-            echo "❌ ERROR: SECRET_KEY must be at least 32 characters long"
+          SECRET_KEY_LENGTH=$(echo -n "${{ secrets.SECRET_KEY }}" | wc -c)
+          if [ "$SECRET_KEY_LENGTH" -lt 32 ]; then
+            echo "❌ ERROR: SECRET_KEY must be at least 32 characters long (got $SECRET_KEY_LENGTH)"
             exit 1
           fi
           
