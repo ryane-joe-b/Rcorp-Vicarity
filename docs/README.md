@@ -34,6 +34,8 @@ Welcome to the Vicarity documentation. This directory contains comprehensive gui
 **Quick lookups:**
 
 - [**Project Status**](../vibe/PROJECT_STATUS.md) - Current progress and next priorities
+- [**Landing Page Docs**](../vibe/LANDING_PAGE_IMPLEMENTATION.md) - Landing page technical details
+- [**Landing Page TODO**](../vibe/LANDING_PAGE_TODO.md) - Phase 2 remaining work
 - [**Environment Variables**](../README.md#environment-variables) - Required configuration
 
 ---
@@ -48,6 +50,8 @@ Welcome to the Vicarity documentation. This directory contains comprehensive gui
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | System design and technical decisions | Developers, Architects |
 | [DEVELOPMENT.md](./DEVELOPMENT.md) | Local dev setup and workflows | Developers |
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Production deployment guide | DevOps, Operators |
+| [../vibe/LANDING_PAGE_IMPLEMENTATION.md](../vibe/LANDING_PAGE_IMPLEMENTATION.md) | Landing page technical documentation | Frontend Developers |
+| [../vibe/LANDING_PAGE_TODO.md](../vibe/LANDING_PAGE_TODO.md) | Phase 2 task list with priorities | Frontend Developers |
 
 ### External Resources
 
@@ -176,17 +180,25 @@ Workers must complete their profile (4 steps) before accessing jobs:
 
 ## Development Status
 
-**Current Phase**: MVP Development
+**Current Phase**: MVP Development - Landing Page Phase 1 Complete
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Backend API | ✅ Complete | All auth endpoints working |
-| Database | ✅ Complete | Schema designed, needs migrations |
-| Infrastructure | ✅ Complete | CI/CD pipeline functional |
-| Frontend | 🚧 In Progress | Basic setup, needs pages |
-| SSL | ⏸️ Pending | Certificate needed |
+| Component | Status | Completion | Notes |
+|-----------|--------|------------|-------|
+| Backend API | ✅ Complete | 100% | All auth endpoints + public stats API working |
+| Database | ✅ Complete | 100% | Schema designed, needs migrations |
+| Infrastructure | ✅ Complete | 100% | CI/CD pipeline functional and hardened |
+| **Landing Page** | 🚧 Phase 1 | 60% | Hero, Stats, ValueProp, CTA, Footer live |
+| SSL | ✅ Complete | 100% | Let's Encrypt configured, auto-renewal working |
+| Auth Pages | ⏸️ Not Started | 0% | Registration, Login, Verify Email |
+| Worker Dashboard | ⏸️ Not Started | 0% | Profile wizard, job board |
+| Care Home Dashboard | ⏸️ Not Started | 0% | Post shifts, browse workers |
 
-See [PROJECT_STATUS.md](../vibe/PROJECT_STATUS.md) for detailed progress.
+**Landing Page Breakdown:**
+- Phase 1 (60%): ✅ Core sections + real-time stats integration
+- Phase 2 (40%): ⏸️ How It Works, Trust, Testimonials, FAQ, Qualifications
+
+See [PROJECT_STATUS.md](../vibe/PROJECT_STATUS.md) for detailed progress.  
+See [LANDING_PAGE_TODO.md](../vibe/LANDING_PAGE_TODO.md) for Phase 2 tasks.
 
 ---
 
@@ -236,7 +248,7 @@ We welcome contributions! Please:
 
 ---
 
-**Last Updated**: January 25, 2026  
-**Version**: 1.0.0
+**Last Updated**: January 27, 2026  
+**Version**: 1.1.0 (Landing Page Phase 1 Complete)
 
 Built with care for the care industry 💚🧡

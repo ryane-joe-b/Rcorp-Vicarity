@@ -237,58 +237,121 @@ Pydantic models separate API contracts from database models:
 
 ## Frontend Architecture
 
-### Component Structure (Planned)
+### Component Structure (Phase 1 Implemented)
+
+**Status:** Landing Page Phase 1 Complete (60%)  
+**See:** `vibe/LANDING_PAGE_IMPLEMENTATION.md` for detailed documentation
 
 ```
 web/
 ├── src/
-│   ├── components/              # Reusable components
-│   │   ├── common/              # Buttons, inputs, cards
-│   │   ├── auth/                # Login, register forms
-│   │   └── layout/              # Header, footer, sidebar
+│   ├── components/              
+│   │   ├── layout/              # ✅ Layout components
+│   │   │   ├── Navbar/
+│   │   │   │   └── Navbar.jsx   # Sticky nav with mobile menu
+│   │   │   └── Footer/
+│   │   │       └── Footer.jsx   # 4-column footer
+│   │   │
+│   │   ├── sections/            # ✅ Landing page sections
+│   │   │   ├── Hero/
+│   │   │   │   └── HeroSection.jsx        # Hero with dual CTAs
+│   │   │   ├── Stats/
+│   │   │   │   ├── StatsSection.jsx       # Real-time stats
+│   │   │   │   └── AnimatedCounter.jsx    # Animated numbers
+│   │   │   ├── ValueProp/
+│   │   │   │   └── ValuePropSection.jsx   # Worker/home benefits
+│   │   │   ├── FinalCTA/
+│   │   │   │   └── FinalCTASection.jsx    # Bottom CTA
+│   │   │   ├── HowItWorks/                # ⏸️ Phase 2
+│   │   │   ├── Trust/                     # ⏸️ Phase 2
+│   │   │   ├── Testimonials/              # ⏸️ Phase 2
+│   │   │   ├── FAQ/                       # ⏸️ Phase 2
+│   │   │   └── Qualifications/            # ⏸️ Phase 2
+│   │   │
+│   │   ├── ui/                  # ✅ Reusable UI components
+│   │   │   └── buttons/
+│   │   │       ├── PrimaryButton.jsx      # Brand buttons
+│   │   │       └── SecondaryButton.jsx    # Outline buttons
+│   │   │
+│   │   ├── shared/              # ✅ Shared utilities
+│   │   │   └── Container.jsx    # Responsive container
+│   │   │
+│   │   ├── auth/                # ⏸️ Auth components (not started)
+│   │   └── common/              # ⏸️ Common components (not started)
 │   │
-│   ├── pages/                   # Route-level components
-│   │   ├── auth/                # Auth pages
-│   │   │   ├── Login.jsx
-│   │   │   ├── Register.jsx
-│   │   │   └── VerifyEmail.jsx
-│   │   ├── worker/              # Worker pages
-│   │   │   ├── Dashboard.jsx
-│   │   │   └── CompleteProfile.jsx
-│   │   └── care-home/           # Care home pages
-│   │       └── Dashboard.jsx
+│   ├── pages/                   # ✅ Route-level components
+│   │   ├── landing/
+│   │   │   └── LandingPage.jsx  # Main landing page (Phase 1)
+│   │   ├── auth/                # ⏸️ Auth pages (not started)
+│   │   ├── worker/              # ⏸️ Worker pages (not started)
+│   │   └── care-home/           # ⏸️ Care home pages (not started)
 │   │
-│   ├── contexts/                # React Context providers
-│   │   └── AuthContext.jsx      # Authentication state
+│   ├── services/                # ✅ API communication
+│   │   └── api.js               # Axios instance + public API methods
 │   │
-│   ├── services/                # API communication
-│   │   └── api.js               # Axios instance + methods
+│   ├── hooks/                   # ✅ Custom React hooks
+│   │   └── usePublicStats.js    # Stats fetching with auto-refresh
 │   │
-│   ├── utils/                   # Utility functions
-│   │   ├── validators.js        # Form validation
-│   │   └── helpers.js           # Helper functions
+│   ├── contexts/                # ⏸️ React Context providers (not started)
+│   ├── utils/                   # ⏸️ Utility functions (not started)
 │   │
-│   ├── hooks/                   # Custom React hooks
-│   │   ├── useAuth.js           # Auth hook
-│   │   └── useApi.js            # API hook
-│   │
-│   ├── App.js                   # Root component
-│   ├── index.js                 # React entry point
-│   └── index.css                # Global styles (Tailwind)
+│   ├── App.js                   # ✅ Root component (renders LandingPage)
+│   ├── index.js                 # ✅ React entry point
+│   └── index.css                # ✅ Global styles (Tailwind + customs)
 │
-├── public/                      # Static assets
-│   ├── index.html               # HTML template
+├── public/                      
+│   ├── index.html               
 │   └── favicon.ico
 │
-└── package.json                 # Node dependencies
+└── package.json                 
 ```
+
+### Design System
+
+**Healthcare Brand Colors:**
+- **Sage** (#8A9A5B): Care workers primary
+- **Terracotta** (#E2725B): Care homes primary
+- **Ocean** (#2E4E6D): Trust/professional accent
+- **Warm** (#F5F3F0): Background
+- **Charcoal** (#2C3E3E): Text
+
+**Typography:**
+- Font: Inter (Google Fonts)
+- Mobile-first scales (2rem → 3rem desktop)
+- Touch-optimized (44px minimum tap targets)
+
+**Animations:**
+- `fadeIn`, `slideUp`, `scaleIn`, `counter`
+- Intersection Observer for scroll-triggered animations
 
 ### State Management Strategy
 
-**Local State**: Component-level state with `useState`  
-**Global Auth State**: Context API for authentication  
-**Server State**: React Query (future) for API data caching  
-**Form State**: Controlled components with validation
+**Current Implementation (Phase 1):**
+- **Local State**: `useState` for component state
+- **Custom Hooks**: `usePublicStats` for API data
+- **API Service**: Axios with interceptors
+
+**Planned (Future Phases):**
+- **Global Auth State**: Context API for authentication  
+- **Server State**: React Query for API data caching  
+- **Form State**: Controlled components with validation
+
+### API Integration
+
+**Public API (Live):**
+```javascript
+// Fetches real-time statistics
+GET /api/public/stats
+// Returns: { total_workers, total_care_homes, ... }
+```
+
+**Implementation:**
+- Service: `publicApi.getStats()` in `services/api.js`
+- Hook: `usePublicStats()` with 5-minute auto-refresh
+- Error handling with fallback data
+- Loading states
+
+**See:** `vibe/LANDING_PAGE_IMPLEMENTATION.md` for complete API documentation
 
 ---
 
