@@ -80,6 +80,10 @@ app.include_router(auth.router)
 app.include_router(worker.router)
 app.include_router(care_home.router)
 
+# Public API (no auth required)
+from app.routers import public
+app.include_router(public.router, prefix="/api/public", tags=["public"])
+
 
 # Response models
 class HealthResponse(BaseModel):
