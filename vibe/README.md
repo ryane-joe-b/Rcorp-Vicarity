@@ -38,6 +38,24 @@ This directory contains the **living documentation** for the Vicarity project - 
 
 ---
 
+### 🎨 **Landing Page Documentation**
+**[`LANDING_PAGE_IMPLEMENTATION.md`](LANDING_PAGE_IMPLEMENTATION.md)** - Landing page architecture
+- Complete component documentation
+- Phase 1 complete (60%), Phase 2 pending (40%)
+- Design system and brand colors
+- API integration details
+- Performance and SEO considerations
+- **Read this** for landing page technical details
+
+**[`LANDING_PAGE_TODO.md`](LANDING_PAGE_TODO.md)** - Remaining work
+- Prioritized task list for Phase 2
+- Detailed requirements for each section
+- Time estimates and acceptance criteria
+- Recommended timeline and completion checklist
+- **Read this** to continue landing page work
+
+---
+
 ## 🔗 Related Documentation
 
 ### In Repository Root
@@ -157,6 +175,14 @@ vicarity/
 
 ## 🔄 Recent Updates
 
+### January 27, 2026
+- ✅ Created `LANDING_PAGE_IMPLEMENTATION.md` - Complete landing page documentation
+- ✅ Created `LANDING_PAGE_TODO.md` - Phase 2 task list with priorities
+- ✅ Updated `PROJECT_STATUS.md` - Landing page Phase 1 marked 60% complete
+- ✅ Fixed deployment workflow - simplified from rolling updates
+- ✅ Fixed stats API routing - now working at `/api/public/stats`
+- ✅ Enhanced health endpoint - now shows all API endpoint statuses
+
 ### January 26, 2026
 - ✅ Created `QUICK_START.md` - Quick reference guide
 - ✅ Created `DEPLOYMENT_INCIDENT_2026_01_26.md` - Incident report
@@ -165,7 +191,7 @@ vicarity/
 - ✅ Added cross-references between all documentation
 
 ### Next Review
-After frontend authentication implementation (ETA: 1-2 hours dev time)
+After landing page Phase 2 completion (ETA: 10-12 hours dev time)
 
 ---
 
