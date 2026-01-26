@@ -19,11 +19,12 @@
 name: Deploy to Production
 
 on:
-  push:
-    branches:
-      - main
+  # Temporarily disabled auto-deploy - test manually first
+  # push:
+  #   branches:
+  #     - main
   
-  # Allow manual deployment
+  # Allow manual deployment only
   workflow_dispatch:
     inputs:
       skip_tests:
@@ -265,67 +266,79 @@ jobs:
             
             echo "✅ .env file validation passed"
             
-            # Remove web-static volume to force fresh build
-            echo "=== Removing old web-static volume ==="
-            docker compose -f docker-compose.production.yml stop web nginx
-            docker volume rm vicarity_web-static 2>/dev/null || echo "Volume already removed or doesn't exist"
+            # Simple deployment - stop, rebuild, start (same as manual deployment)
+            echo "=== Starting deployment ==="
             
-            # Build and deploy with zero-downtime
-            echo "=== Building and deploying ==="
+            # Stop all services
+            echo "Stopping all services..."
+            docker compose -f docker-compose.production.yml down
+            
+            # Remove web-static volume to force fresh React build
+            echo "Removing web-static volume for fresh build..."
+            docker volume rm vicarity_web-static 2>/dev/null || echo "Volume doesn't exist (first deploy or already removed)"
+            
+            # Build all services with no cache
+            echo "Building all services with no cache..."
             docker compose -f docker-compose.production.yml build --no-cache
             
-            # Rolling update - one service at a time
-            echo "=== Starting rolling update ==="
+            # Start all services
+            echo "Starting all services..."
+            docker compose -f docker-compose.production.yml up -d
             
-            # Update Redis first (stateful, but quick)
-            docker compose -f docker-compose.production.yml up -d redis
-            sleep 5
+            # Wait for services to be ready
+            echo "Waiting for services to start..."
+            sleep 15
             
-            # Update API with health check
-            docker compose -f docker-compose.production.yml up -d api
+            # Verify deployment
+            echo "=== Verifying deployment ==="
             
-            # Wait for API to be healthy
-            echo "=== Waiting for API health check ==="
-            RETRIES=30
+            # Check if containers are running
+            if ! docker compose -f docker-compose.production.yml ps | grep -q "Up"; then
+              echo "❌ ERROR: No containers are running!"
+              docker compose -f docker-compose.production.yml ps
+              docker compose -f docker-compose.production.yml logs --tail=100
+              exit 1
+            fi
+            
+            # Check API health
+            echo "Checking API health..."
+            RETRIES=20
             while [ $RETRIES -gt 0 ]; do
-              if docker compose -f docker-compose.production.yml exec -T api curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+              if curl -sf http://localhost/api/health > /dev/null 2>&1; then
                 echo "✅ API is healthy!"
                 break
               fi
               echo "⏳ Waiting for API... ($RETRIES retries left)"
               RETRIES=$((RETRIES - 1))
-              sleep 2
+              sleep 3
             done
             
             if [ $RETRIES -eq 0 ]; then
-              echo "❌ ERROR: API health check failed after 60 seconds!"
+              echo "❌ ERROR: API health check failed!"
               echo ""
-              echo "=== API Container Status ==="
-              docker compose -f docker-compose.production.yml ps api
+              echo "=== Container Status ==="
+              docker compose -f docker-compose.production.yml ps
               echo ""
-              echo "=== Last 50 lines of API logs ==="
+              echo "=== API Logs ==="
               docker compose -f docker-compose.production.yml logs api --tail=50
               echo ""
-              echo "=== Checking .env file (sanitized) ==="
-              cat .env | sed 's/\(.*=\).*/\1***REDACTED***/'
-              echo ""
-              echo "=== Database connectivity test ==="
-              docker compose -f docker-compose.production.yml exec -T api python -c "import os; print('DATABASE_URL exists:', 'DATABASE_URL' in os.environ); print('Length:', len(os.environ.get('DATABASE_URL', '')))" || echo "Failed to check env vars"
+              echo "=== Nginx Logs ==="
+              docker compose -f docker-compose.production.yml logs nginx --tail=30
               exit 1
             fi
             
-            # Update web and nginx
-            docker compose -f docker-compose.production.yml up -d web nginx
-            
-            # Final health check
-            echo "=== Final health check ==="
-            sleep 10
-            if curl -sf http://localhost/health > /dev/null 2>&1; then
-              echo "=== Deployment successful! ==="
+            # Check web frontend
+            echo "Checking web frontend..."
+            if curl -sf http://localhost/ | grep -q "root"; then
+              echo "✅ Web frontend is serving content!"
             else
-              echo "ERROR: Final health check failed!"
+              echo "❌ ERROR: Web frontend not responding correctly!"
+              docker compose -f docker-compose.production.yml logs web --tail=30
+              docker compose -f docker-compose.production.yml logs nginx --tail=30
               exit 1
             fi
+            
+            echo "=== Deployment successful! ==="
             
             # Cleanup old images
             echo "=== Cleaning up old images ==="
