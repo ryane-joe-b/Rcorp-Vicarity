@@ -7,6 +7,7 @@ Complete authentication system with smart routing based on user type.
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime
+from typing import List
 
 import redis
 from fastapi import FastAPI
@@ -98,7 +99,7 @@ class HealthResponse(BaseModel):
     timestamp: str
     database: str
     redis: str
-    endpoints: list[EndpointStatus]
+    endpoints: List[EndpointStatus]
 
 
 class MessageResponse(BaseModel):
