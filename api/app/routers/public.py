@@ -13,7 +13,7 @@ from app.models.user import User, UserRole
 from app.models.worker_profile import WorkerProfile
 from app.models.care_home_profile import CareHomeProfile
 
-router = APIRouter(prefix="/api/public", tags=["public"])
+router = APIRouter(prefix="/public", tags=["public"])
 
 
 @router.get("/stats")
