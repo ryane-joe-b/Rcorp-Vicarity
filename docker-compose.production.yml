@@ -13,7 +13,7 @@
 #   docker compose -f docker-compose.production.yml down
 #===============================================================================
 
-version: '3.8'
+# Note: 'version' is deprecated in Docker Compose v2+ and has been removed
 
 services:
   #-----------------------------------------------------------------------------
