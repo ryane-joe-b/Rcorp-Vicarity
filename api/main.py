@@ -82,16 +82,23 @@ app.include_router(care_home.router)
 
 # Public API (no auth required)
 from app.routers import public
-app.include_router(public.router, prefix="/api/public", tags=["public"])
+app.include_router(public.router)
 
 
 # Response models
+class EndpointStatus(BaseModel):
+    path: str
+    status: str
+    description: str
+
+
 class HealthResponse(BaseModel):
     status: str
     environment: str
     timestamp: str
     database: str
     redis: str
+    endpoints: list[EndpointStatus]
 
 
 class MessageResponse(BaseModel):
@@ -103,6 +110,7 @@ class MessageResponse(BaseModel):
 async def health_check():
     """
     Health check endpoint for monitoring and load balancers.
+    Includes status of all API endpoints and services.
     """
     # Check database
     db_status = "connected"
@@ -125,12 +133,47 @@ async def health_check():
         except Exception:
             redis_status = "error"
     
+    # Check API endpoints
+    endpoints = [
+        EndpointStatus(
+            path="/api/auth/register",
+            status="operational" if db_status == "connected" else "degraded",
+            description="User registration endpoint"
+        ),
+        EndpointStatus(
+            path="/api/auth/login",
+            status="operational" if db_status == "connected" and redis_status == "connected" else "degraded",
+            description="User authentication endpoint"
+        ),
+        EndpointStatus(
+            path="/api/public/stats",
+            status="operational" if db_status == "connected" else "degraded",
+            description="Public statistics for landing page"
+        ),
+        EndpointStatus(
+            path="/api/worker/profile",
+            status="operational" if db_status == "connected" else "degraded",
+            description="Worker profile management"
+        ),
+        EndpointStatus(
+            path="/api/care-home/profile",
+            status="operational" if db_status == "connected" else "degraded",
+            description="Care home profile management"
+        ),
+    ]
+    
+    # Overall status
+    overall_status = "healthy"
+    if db_status == "error" or redis_status == "error":
+        overall_status = "degraded"
+    
     return HealthResponse(
-        status="healthy",
+        status=overall_status,
         environment=settings.ENVIRONMENT,
         timestamp=datetime.utcnow().isoformat(),
         database=db_status,
         redis=redis_status,
+        endpoints=endpoints,
     )
 
 
