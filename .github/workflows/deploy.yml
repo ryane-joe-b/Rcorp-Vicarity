@@ -19,12 +19,11 @@
 name: Deploy to Production
 
 on:
-  # Temporarily disabled auto-deploy - test manually first
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
   
-  # Allow manual deployment only
+  # Allow manual deployment
   workflow_dispatch:
     inputs:
       skip_tests:

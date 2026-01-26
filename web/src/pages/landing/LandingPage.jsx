@@ -11,6 +11,8 @@ import Footer from '../../components/layout/Footer/Footer';
  * 
  * Mobile-first, conversion-optimized landing page for Vicarity
  * Dual-path user journeys for care workers and care homes
+ * 
+ * Deployment test: Workflow fixed and simplified - Jan 26, 2026
  */
 const LandingPage = () => {
   return (
