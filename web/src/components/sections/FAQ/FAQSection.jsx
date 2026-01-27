@@ -200,7 +200,7 @@ const FAQSection = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="mailto:support@vicarity.co.uk"
+              href="mailto:hello@vicarity.co.uk"
               className="min-h-[44px] px-8 py-3 bg-ocean-500 hover:bg-ocean-600 
                        text-white font-semibold rounded-lg shadow-lg 
                        transition-all hover:scale-105 active:scale-95

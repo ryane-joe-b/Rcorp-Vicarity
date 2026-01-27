@@ -174,10 +174,10 @@ const Navbar = () => {
                 <div className="text-sm text-gray-600 space-y-2">
                   <p className="font-medium">Need help?</p>
                   <a
-                    href="mailto:hello@vicarity.com"
+                    href="mailto:hello@vicarity.co.uk"
                     className="text-ocean-600 hover:underline block"
                   >
-                    hello@vicarity.com
+                    hello@vicarity.co.uk
                   </a>
                   <a
                     href="tel:+447887141400"
