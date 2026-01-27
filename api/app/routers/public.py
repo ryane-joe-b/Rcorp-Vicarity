@@ -12,6 +12,7 @@ from app.core.database import get_db
 from app.models.user import User, UserRole
 from app.models.worker_profile import WorkerProfile
 from app.models.care_home_profile import CareHomeProfile
+from app.models.qualification import Qualification
 
 router = APIRouter(prefix="/public", tags=["public"])
 
@@ -74,6 +75,44 @@ async def get_public_stats(db: Session = Depends(get_db)) -> Dict[str, Any]:
             "completed": f"{completed_profiles:,}",
             "verified": f"{verified_care_homes:,}",
         }
+    }
+
+
+@router.get("/qualifications")
+async def get_qualifications(db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """
+    Get all active qualifications with worker counts.
+    Used for landing page qualifications showcase.
+    """
+    
+    # Get all active qualifications, ordered by display_order
+    qualifications = db.query(Qualification).filter(
+        Qualification.is_active == True
+    ).order_by(Qualification.display_order).all()
+    
+    result = []
+    for qual in qualifications:
+        # Count workers with this qualification
+        # WorkerProfile.qualifications is JSONB array of qualification IDs
+        worker_count = db.query(WorkerProfile).filter(
+            func.jsonb_exists(WorkerProfile.qualifications, str(qual.id))
+        ).count()
+        
+        result.append({
+            "id": str(qual.id),
+            "code": qual.code,
+            "name": qual.name,
+            "description": qual.description,
+            "category": qual.category.value,
+            "is_mandatory": qual.is_mandatory,
+            "worker_count": worker_count,
+            "display_order": qual.display_order,
+        })
+    
+    return {
+        "qualifications": result,
+        "total_count": len(result),
+        "updated_at": datetime.utcnow().isoformat()
     }
 
 

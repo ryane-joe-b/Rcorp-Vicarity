@@ -5,6 +5,7 @@ import StatsSection from '../../components/sections/Stats/StatsSection';
 import ValuePropSection from '../../components/sections/ValueProp/ValuePropSection';
 import HowItWorksSection from '../../components/sections/HowItWorks/HowItWorksSection';
 import TrustCenterSection from '../../components/sections/Trust/TrustCenterSection';
+import QualificationsSection from '../../components/sections/Qualifications/QualificationsSection';
 import TestimonialsSection from '../../components/sections/Testimonials/TestimonialsSection';
 import FAQSection from '../../components/sections/FAQ/FAQSection';
 import FinalCTASection from '../../components/sections/FinalCTA/FinalCTASection';
@@ -40,6 +41,9 @@ const LandingPage = () => {
 
         {/* Trust & Compliance Center */}
         <TrustCenterSection />
+
+        {/* Qualifications Showcase */}
+        <QualificationsSection />
 
         {/* Testimonials Carousel */}
         <TestimonialsSection />

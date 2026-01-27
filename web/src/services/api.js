@@ -65,6 +65,24 @@ export const publicApi = {
   },
 
   /**
+   * Get all active qualifications with worker counts
+   * Used for landing page qualifications showcase
+   */
+  getQualifications: async () => {
+    try {
+      const response = await api.get('/public/qualifications');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch qualifications:', error);
+      // Return empty data if API fails
+      return {
+        qualifications: [],
+        total_count: 0,
+      };
+    }
+  },
+
+  /**
    * Check public API health
    */
   healthCheck: async () => {
