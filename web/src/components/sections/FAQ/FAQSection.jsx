@@ -210,7 +210,7 @@ const FAQSection = () => {
               <span>Email Us</span>
             </a>
             <a
-              href="tel:02012345678"
+              href="tel:+447887141400"
               className="min-h-[44px] px-8 py-3 bg-white hover:bg-gray-50 
                        text-ocean-600 font-semibold rounded-lg shadow-lg 
                        border-2 border-ocean-500
@@ -218,7 +218,7 @@ const FAQSection = () => {
                        inline-flex items-center justify-center gap-2"
             >
               <span>📞</span>
-              <span>020 1234 5678</span>
+              <span>+44 7887 141400</span>
             </a>
           </div>
         </div>

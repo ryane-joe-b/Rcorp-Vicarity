@@ -180,10 +180,10 @@ const Navbar = () => {
                     hello@vicarity.com
                   </a>
                   <a
-                    href="tel:02071234567"
+                    href="tel:+447887141400"
                     className="text-ocean-600 hover:underline block"
                   >
-                    020 7123 4567
+                    +44 7887 141400
                   </a>
                 </div>
               </div>

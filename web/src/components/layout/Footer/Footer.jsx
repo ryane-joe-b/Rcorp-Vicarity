@@ -125,7 +125,7 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between text-sm text-gray-400">
             <div className="mb-4 md:mb-0">
               <p>Email: <a href="mailto:hello@vicarity.com" className="hover:text-sage-400">hello@vicarity.com</a></p>
-              <p>Phone: <a href="tel:02071234567" className="hover:text-sage-400">020 7123 4567</a></p>
+              <p>Phone: <a href="tel:+447887141400" className="hover:text-sage-400">+44 7887 141400</a></p>
             </div>
             <div>
               <p>Registered in England and Wales</p>
