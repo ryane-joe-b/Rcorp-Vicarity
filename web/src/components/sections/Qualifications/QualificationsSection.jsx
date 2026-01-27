@@ -118,15 +118,6 @@ const LoadingSkeleton = () => {
 const QualificationsSection = () => {
   const { qualifications, loading, error } = useQualifications();
   
-  // Group qualifications by category
-  const groupedQualifications = qualifications.reduce((acc, qual) => {
-    if (!acc[qual.category]) {
-      acc[qual.category] = [];
-    }
-    acc[qual.category].push(qual);
-    return acc;
-  }, {});
-  
   return (
     <section className="py-16 md:py-24 bg-gradient-to-br from-warm-50 to-white">
       <Container>
