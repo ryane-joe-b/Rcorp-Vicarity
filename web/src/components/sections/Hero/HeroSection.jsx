@@ -2,12 +2,14 @@ import React from 'react';
 import Container from '../../shared/Container';
 import PrimaryButton from '../../ui/buttons/PrimaryButton';
 import SecondaryButton from '../../ui/buttons/SecondaryButton';
+import usePublicStats from '../../../hooks/usePublicStats';
 
 /**
  * Hero Section - The Conversion Engine
  * Mobile-first, dual-path CTAs, instant trust establishment
  */
 const HeroSection = () => {
+  const { stats } = usePublicStats();
   return (
     <section className="relative bg-gradient-to-br from-background via-white to-sage-50 pt-20 pb-16 md:pt-28 md:pb-24 overflow-hidden">
       {/* Decorative background elements */}
@@ -25,7 +27,7 @@ const HeroSection = () => {
               <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              <span>Trusted by 800+ care professionals</span>
+              <span>Trusted by {stats.display?.workers || '800+'} care professionals</span>
             </div>
 
             {/* Main Headline - Conversion-optimized */}
@@ -126,7 +128,7 @@ const HeroSection = () => {
                   <div className="w-8 h-8 rounded-full bg-ocean-300 border-2 border-white"></div>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-charcoal">800+ Workers</p>
+                  <p className="text-sm font-semibold text-charcoal">{stats.display?.workers || '800+'} Workers</p>
                   <p className="text-xs text-gray-500">Active this week</p>
                 </div>
               </div>

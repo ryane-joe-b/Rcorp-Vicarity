@@ -1,5 +1,6 @@
 import React from 'react';
 import Container from '../../shared/Container';
+import usePublicStats from '../../../hooks/usePublicStats';
 
 /**
  * Trust & Compliance Center Section
@@ -91,6 +92,8 @@ const TrustBadge = ({ badge }) => {
 };
 
 const TrustCenterSection = () => {
+  const { stats } = usePublicStats();
+  
   return (
     <section className="py-16 md:py-24 bg-white">
       <Container>
@@ -115,7 +118,7 @@ const TrustCenterSection = () => {
         <div className="bg-gradient-to-r from-ocean-50 to-sage-50 p-8 md:p-12 
                        rounded-2xl shadow-lg text-center">
           <h3 className="text-2xl md:text-3xl font-bold text-charcoal-900 mb-4">
-            Trusted by 800+ Care Professionals
+            Trusted by {stats.display?.workers || '800+'} Care Professionals
           </h3>
           <p className="text-lg text-gray-700 mb-6 max-w-3xl mx-auto">
             Join the UK's most trusted care staffing platform. We've facilitated over 10,000 

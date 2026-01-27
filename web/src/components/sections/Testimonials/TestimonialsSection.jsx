@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Container from '../../shared/Container';
+import usePublicStats from '../../../hooks/usePublicStats';
 
 /**
  * Testimonials Carousel Section
@@ -137,6 +138,7 @@ const TestimonialCard = ({ testimonial }) => {
 };
 
 const TestimonialsSection = () => {
+  const { stats } = usePublicStats();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   
@@ -265,7 +267,7 @@ const TestimonialsSection = () => {
               <div className="text-sm text-gray-600">Average Rating</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-sage-600">800+</div>
+              <div className="text-3xl font-bold text-sage-600">{stats.display?.workers || '800+'}</div>
               <div className="text-sm text-gray-600">Active Users</div>
             </div>
             <div>
