@@ -3,6 +3,8 @@ import Navbar from '../../components/layout/Navbar/Navbar';
 import HeroSection from '../../components/sections/Hero/HeroSection';
 import StatsSection from '../../components/sections/Stats/StatsSection';
 import ValuePropSection from '../../components/sections/ValueProp/ValuePropSection';
+import HowItWorksSection from '../../components/sections/HowItWorks/HowItWorksSection';
+import TrustCenterSection from '../../components/sections/Trust/TrustCenterSection';
 import FinalCTASection from '../../components/sections/FinalCTA/FinalCTASection';
 import Footer from '../../components/layout/Footer/Footer';
 
@@ -31,11 +33,11 @@ const LandingPage = () => {
         {/* Value Propositions */}
         <ValuePropSection />
 
-        {/* TODO: Add How It Works Section */}
-        {/* <HowItWorksSection /> */}
+        {/* How It Works Timeline */}
+        <HowItWorksSection />
 
-        {/* TODO: Add Trust & Compliance Center */}
-        {/* <TrustCenterSection /> */}
+        {/* Trust & Compliance Center */}
+        <TrustCenterSection />}
 
         {/* TODO: Add Testimonials Carousel */}
         {/* <TestimonialsSection /> */}
