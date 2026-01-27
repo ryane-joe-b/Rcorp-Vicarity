@@ -1,15 +1,20 @@
 import React from 'react';
-import LandingPage from './pages/landing/LandingPage';
 import './index.css';
 
 /**
  * Main App Component
- * Currently shows landing page
- * TODO: Add routing when auth pages are built
+ * Testing minimal render
  */
 function App() {
   console.log('Vicarity App Loading - Build:', process.env.NODE_ENV);
-  return <LandingPage />;
+  
+  return (
+    <div style={{ padding: '50px', fontFamily: 'Arial' }}>
+      <h1>Vicarity - Testing</h1>
+      <p>If you see this, React is working.</p>
+      <p>Build time: {new Date().toISOString()}</p>
+    </div>
+  );
 }
 
 export default App;
