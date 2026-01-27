@@ -1,18 +1,18 @@
 import React from 'react';
+import Navbar from './components/layout/Navbar/Navbar';
 import './index.css';
 
 /**
  * Main App Component
- * Testing minimal render
+ * Testing components one by one
  */
 function App() {
-  console.log('Vicarity App Loading - Build:', process.env.NODE_ENV);
-  
   return (
-    <div style={{ padding: '50px', fontFamily: 'Arial' }}>
-      <h1>Vicarity - Testing</h1>
-      <p>If you see this, React is working.</p>
-      <p>Build time: {new Date().toISOString()}</p>
+    <div className="min-h-screen bg-white">
+      <Navbar />
+      <div style={{ padding: '50px' }}>
+        <h1>Testing: Navbar loaded successfully</h1>
+      </div>
     </div>
   );
 }
