@@ -7,7 +7,18 @@ import { publicApi } from '../services/api';
  * @returns {object} - { stats, loading, error, refresh }
  */
 const usePublicStats = (refreshInterval = 5 * 60 * 1000) => {
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState({
+    total_workers: 0,
+    total_care_homes: 0,
+    completed_profiles: 0,
+    verified_care_homes: 0,
+    display: {
+      workers: '0+',
+      care_homes: '0+',
+      completed: '0',
+      verified: '0',
+    },
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
