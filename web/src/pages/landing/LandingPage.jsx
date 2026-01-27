@@ -49,7 +49,7 @@ const LandingPage = () => {
         <TestimonialsSection />
 
         {/* FAQ Section */}
-        <FAQSection />}
+        <FAQSection />
 
         {/* Final CTA */}
         <FinalCTASection />
