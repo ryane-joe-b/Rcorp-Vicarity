@@ -267,7 +267,7 @@ const TestimonialsSection = () => {
               <div className="text-sm text-gray-600">Average Rating</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-sage-600">{stats.display?.workers || '800+'}</div>
+              <div className="text-3xl font-bold text-sage-600">{stats.total_workers > 0 ? stats.display?.workers : stats.total_workers}</div>
               <div className="text-sm text-gray-600">Active Users</div>
             </div>
             <div>

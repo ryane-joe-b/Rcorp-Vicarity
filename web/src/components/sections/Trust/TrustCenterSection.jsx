@@ -118,7 +118,7 @@ const TrustCenterSection = () => {
         <div className="bg-gradient-to-r from-ocean-50 to-sage-50 p-8 md:p-12 
                        rounded-2xl shadow-lg text-center">
           <h3 className="text-2xl md:text-3xl font-bold text-charcoal-900 mb-4">
-            Trusted by {stats.display?.workers || '800+'} Care Professionals
+            Trusted by {stats.total_workers > 0 ? stats.display?.workers : stats.total_workers} Care Professionals
           </h3>
           <p className="text-lg text-gray-700 mb-6 max-w-3xl mx-auto">
             Join the UK's most trusted care staffing platform. We've facilitated over 10,000 
