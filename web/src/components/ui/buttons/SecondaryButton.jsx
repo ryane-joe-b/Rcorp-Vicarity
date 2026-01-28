@@ -1,7 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 /**
  * Secondary button - Outline style for less prominent actions
+ * Supports React Router Link for internal navigation
  */
 const SecondaryButton = ({
   children,
@@ -76,14 +78,14 @@ const SecondaryButton = ({
 
   if (href) {
     return (
-      <a
-        href={href}
+      <Link
+        to={href}
         className={combinedClasses}
         aria-label={ariaLabel || (typeof children === 'string' ? children : undefined)}
         {...props}
       >
         {content}
-      </a>
+      </Link>
     );
   }
 

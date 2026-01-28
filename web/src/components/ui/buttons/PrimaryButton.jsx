@@ -1,8 +1,10 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 /**
  * Primary CTA button - Healthcare touch-optimized with accessibility
  * Variants: sage (workers), terracotta (care homes), ocean (general)
+ * Supports React Router Link for internal navigation
  */
 const PrimaryButton = ({
   children,
@@ -77,17 +79,17 @@ const PrimaryButton = ({
     </>
   );
 
-  // If href provided, render as link
+  // If href provided, render as React Router Link
   if (href) {
     return (
-      <a
-        href={href}
+      <Link
+        to={href}
         className={combinedClasses}
         aria-label={ariaLabel || (typeof children === 'string' ? children : undefined)}
         {...props}
       >
         {content}
-      </a>
+      </Link>
     );
   }
 
