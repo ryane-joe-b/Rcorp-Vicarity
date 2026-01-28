@@ -77,9 +77,8 @@ const TimelineStep = ({ step, color, isLast }) => {
     <div className="relative">
       {/* Connector line (not shown for last step) */}
       {!isLast && (
-        <div 
-          className={`absolute left-6 top-14 w-0.5 h-full bg-${color}-200 
-                     md:left-full md:top-6 md:w-full md:h-0.5 md:ml-6`}
+        <div
+          className={`absolute left-6 top-14 w-0.5 h-full bg-${color}-200`}
           aria-hidden="true"
         />
       )}
