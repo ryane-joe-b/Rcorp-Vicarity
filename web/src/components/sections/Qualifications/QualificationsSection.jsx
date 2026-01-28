@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Container from '../../shared/Container';
 import useQualifications from '../../../hooks/useQualifications';
 
 /**
  * Qualifications Showcase Section
- * 
+ *
  * Displays all UK care qualifications with worker counts
  * - Interactive grid of qualifications
  * - Shows breadth of qualified workers
  * - Real-time data from API
+ * - Collapsible on mobile to reduce scrolling
  */
 
 // Icon mapping for qualification categories
@@ -72,15 +73,6 @@ const QualificationCard = ({ qualification }) => {
           </span>
         </div>
       </div>
-      
-      {/* Mandatory Badge */}
-      {qualification.is_mandatory && (
-        <div className="absolute bottom-4 left-4">
-          <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-semibold">
-            Required
-          </span>
-        </div>
-      )}
     </div>
   );
 };
@@ -117,7 +109,8 @@ const LoadingSkeleton = () => {
 
 const QualificationsSection = () => {
   const { qualifications, loading, error } = useQualifications();
-  
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <section className="py-16 md:py-24 bg-gradient-to-br from-warm-50 to-white">
       <Container>
@@ -127,14 +120,40 @@ const QualificationsSection = () => {
             Highly Qualified Care Professionals
           </h2>
           <p className="text-lg text-gray-600 leading-relaxed">
-            Our care workers hold a wide range of UK-recognized qualifications, 
-            from mandatory certifications to specialized training. 
+            Our care workers hold a wide range of UK-recognized qualifications,
+            from mandatory certifications to specialized training.
             Every professional is fully vetted and qualified for their role.
           </p>
+
+          {/* Mobile Toggle Button */}
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="md:hidden mt-6 min-h-[44px] px-6 py-3 bg-sage-500 hover:bg-sage-600
+                     text-white font-semibold rounded-lg shadow-lg
+                     transition-all active:scale-95 flex items-center gap-2 mx-auto"
+          >
+            {isExpanded ? (
+              <>
+                <span>Hide Qualifications</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </>
+            ) : (
+              <>
+                <span>View All {qualifications.length} Qualifications</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </>
+            )}
+          </button>
         </div>
-        
-        {/* Category Legend */}
-        <CategoryLegend />
+
+        {/* Collapsible Content - Hidden on mobile unless expanded */}
+        <div className={`${isExpanded ? 'block' : 'hidden'} md:block`}>
+          {/* Category Legend */}
+          <CategoryLegend />
         
         {/* Loading State */}
         {loading && <LoadingSkeleton />}
@@ -197,6 +216,7 @@ const QualificationsSection = () => {
             </div>
           </div>
         )}
+        </div>
       </Container>
     </section>
   );
