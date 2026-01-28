@@ -12,7 +12,7 @@ from app.models.care_home_profile import CareHomeProfile
 from app.schemas.care_home import CareHomeProfileUpdate, CareHomeProfileResponse
 
 
-router = APIRouter(prefix="/api/care-home", tags=["care-home-profile"])
+router = APIRouter(prefix="/care-home", tags=["care-home-profile"])
 
 
 @router.get("/profile", response_model=CareHomeProfileResponse)

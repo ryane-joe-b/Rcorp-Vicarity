@@ -44,7 +44,7 @@ from app.schemas.auth import (
 from app.schemas.user import CurrentUserResponse
 
 
-router = APIRouter(prefix="/api/auth", tags=["authentication"])
+router = APIRouter(prefix="/auth", tags=["authentication"])
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)

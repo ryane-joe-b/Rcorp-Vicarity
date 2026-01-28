@@ -134,7 +134,7 @@ async def health_check():
         except Exception:
             redis_status = "error"
     
-    # Check API endpoints
+    # Check API endpoints (note: nginx adds /api prefix, so actual paths are /api/auth/*, etc.)
     endpoints = [
         EndpointStatus(
             path="/api/auth/register",

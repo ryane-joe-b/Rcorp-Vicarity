@@ -12,7 +12,7 @@ from app.models.worker_profile import WorkerProfile
 from app.schemas.worker import WorkerProfileUpdate, WorkerProfileResponse
 
 
-router = APIRouter(prefix="/api/worker", tags=["worker-profile"])
+router = APIRouter(prefix="/worker", tags=["worker-profile"])
 
 
 @router.get("/profile", response_model=WorkerProfileResponse)
