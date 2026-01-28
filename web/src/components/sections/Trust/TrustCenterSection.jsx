@@ -25,6 +25,18 @@ const trustBadges = [
     detail: "100% of workers undergo enhanced background checks"
   },
   {
+    icon: "📋",
+    title: "Reference Checks",
+    description: "Verified employment history",
+    detail: "All workers provide verified professional references"
+  },
+  {
+    icon: "⭐",
+    title: "Quality Ratings",
+    description: "Transparent feedback system",
+    detail: "Workers rated after every shift for quality assurance"
+  },
+  {
     icon: "🔒",
     title: "GDPR Compliant",
     description: "Full data protection compliance",
