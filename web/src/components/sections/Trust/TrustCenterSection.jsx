@@ -14,9 +14,9 @@ import usePublicStats from '../../../hooks/usePublicStats';
 const trustBadges = [
   {
     icon: "🏥",
-    title: "CQC Compliant",
-    description: "Registered with Care Quality Commission",
-    detail: "All care homes and workers meet CQC standards"
+    title: "CQC Checks",
+    description: "Care Quality Commission verification",
+    detail: "All care homes verified against CQC standards"
   },
   {
     icon: "✓",
@@ -41,18 +41,6 @@ const trustBadges = [
     title: "256-bit SSL",
     description: "Military-grade encryption",
     detail: "All data transmitted is fully encrypted"
-  },
-  {
-    icon: "🛡️",
-    title: "Insured",
-    description: "Professional indemnity coverage",
-    detail: "£5 million professional indemnity insurance"
-  },
-  {
-    icon: "📋",
-    title: "Data Registered",
-    description: "ICO registered data controller",
-    detail: "Registration number: ZB123456"
   },
   {
     icon: "24/7",
@@ -154,18 +142,6 @@ const TrustCenterSection = () => {
           </div>
         </div>
 
-        {/* Certification Logos (Placeholder) */}
-        <div className="mt-12 text-center">
-          <p className="text-sm text-gray-500 mb-6">
-            Accredited and certified by
-          </p>
-          <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
-            <div className="text-2xl font-bold text-gray-400">CQC</div>
-            <div className="text-2xl font-bold text-gray-400">ICO</div>
-            <div className="text-2xl font-bold text-gray-400">Stripe</div>
-            <div className="text-2xl font-bold text-gray-400">ISO 27001</div>
-          </div>
-        </div>
       </Container>
     </section>
   );
