@@ -32,7 +32,6 @@ const WorkerRegistration = () => {
     phone: '',
     date_of_birth: '',
     postcode: '',
-    role: 'worker', // Fixed for workers
   });
 
   const [errors, setErrors] = useState({});
@@ -160,12 +159,25 @@ const WorkerRegistration = () => {
 
     if (!validateStep()) return;
 
-    // Remove confirmPassword before sending
-    const { confirmPassword, ...submitData } = formData;
+    // Backend only expects email, password, and user_type for registration
+    // Profile details will be saved later in profile completion
+    const submitData = {
+      email: formData.email,
+      password: formData.password,
+      user_type: 'worker', // Backend expects 'user_type' not 'role'
+    };
 
     const result = await register(submitData);
 
     if (result.success) {
+      // Store profile data in localStorage to use in profile completion
+      localStorage.setItem('pending_worker_profile', JSON.stringify({
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        phone: formData.phone,
+        date_of_birth: formData.date_of_birth,
+        postcode: formData.postcode,
+      }));
       navigate('/verify-email');
     }
   };

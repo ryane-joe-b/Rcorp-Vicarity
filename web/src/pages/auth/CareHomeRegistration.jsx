@@ -30,7 +30,6 @@ const CareHomeRegistration = () => {
     confirmPassword: '',
     phone: '',
     postcode: '',
-    role: 'care_home_admin', // Fixed for care homes
   });
 
   const [errors, setErrors] = useState({});
@@ -139,12 +138,24 @@ const CareHomeRegistration = () => {
 
     if (!validateForm()) return;
 
-    // Remove confirmPassword before sending
-    const { confirmPassword, ...submitData } = formData;
+    // Backend only expects email, password, and user_type for registration
+    // Profile details will be saved later in profile completion
+    const submitData = {
+      email: formData.email,
+      password: formData.password,
+      user_type: 'care_home', // Backend expects 'user_type' not 'role'
+    };
 
     const result = await register(submitData);
 
     if (result.success) {
+      // Store profile data in localStorage to use in profile completion
+      localStorage.setItem('pending_care_home_profile', JSON.stringify({
+        business_name: formData.business_name,
+        cqc_number: formData.cqc_number,
+        phone: formData.phone,
+        postcode: formData.postcode,
+      }));
       navigate('/verify-email');
     }
   };
