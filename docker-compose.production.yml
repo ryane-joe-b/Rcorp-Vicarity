@@ -40,6 +40,7 @@ services:
       - ENVIRONMENT=production
       - LOG_LEVEL=INFO
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://vicarity.co.uk}
+      - FRONTEND_URL=https://vicarity.co.uk
     
     # Health check - ensures API is responding
     healthcheck:
