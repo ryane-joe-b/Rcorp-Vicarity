@@ -9,6 +9,7 @@ import WorkerRegistration from './pages/auth/WorkerRegistration';
 import CareHomeRegistration from './pages/auth/CareHomeRegistration';
 import Login from './pages/auth/Login';
 import EmailVerification from './pages/auth/EmailVerification';
+import WorkerOnboarding from './pages/onboarding/WorkerOnboarding';
 
 import './index.css';
 
@@ -31,6 +32,9 @@ function App() {
             <Route path="/register/care-home" element={<CareHomeRegistration />} />
             <Route path="/login" element={<Login />} />
             <Route path="/verify-email" element={<EmailVerification />} />
+
+            {/* Onboarding Routes */}
+            <Route path="/complete-profile" element={<WorkerOnboarding />} />
 
             {/* Fallback - 404 */}
             <Route path="*" element={<LandingPage />} />

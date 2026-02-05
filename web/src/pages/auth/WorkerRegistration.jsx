@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Container from '../../components/shared/Container';
 
@@ -19,7 +19,6 @@ import Container from '../../components/shared/Container';
 
 const WorkerRegistration = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { register, loading, error: authError } = useAuth();
 
   const [step, setStep] = useState(1);
