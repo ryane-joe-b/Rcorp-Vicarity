@@ -17,8 +17,15 @@ class WorkerProfileUpdate(BaseModel):
     date_of_birth: Optional[date] = None
     profile_picture_url: Optional[str] = None
     address_line_1: Optional[str] = None
+    address_line_2: Optional[str] = None
     city: Optional[str] = None
+    county: Optional[str] = None
     postcode: Optional[str] = None
+
+    # Emergency Contact (Optional)
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    emergency_contact_relationship: Optional[str] = None
     
     # Step 2
     dbs_status: Optional[str] = None
@@ -62,7 +69,17 @@ class WorkerProfileResponse(BaseModel):
     phone: Optional[str]
     date_of_birth: Optional[date]
     profile_picture_url: Optional[str]
-    
+    address_line_1: Optional[str]
+    address_line_2: Optional[str]
+    city: Optional[str]
+    county: Optional[str]
+    postcode: Optional[str]
+
+    # Emergency Contact
+    emergency_contact_name: Optional[str]
+    emergency_contact_phone: Optional[str]
+    emergency_contact_relationship: Optional[str]
+
     # Qualifications
     dbs_status: str
     dbs_expiry_date: Optional[date]

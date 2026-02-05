@@ -7,7 +7,7 @@ import Container from '../../components/shared/Container';
  * Worker Registration - 3-Step Wizard
  *
  * Step 1: Personal Details (email, password, name)
- * Step 2: Contact & Location (phone, DOB, postcode)
+ * Step 2: Contact Details (phone, DOB)
  * Step 3: Final Review & Submit
  *
  * Features:
@@ -30,7 +30,6 @@ const WorkerRegistration = () => {
     last_name: '',
     phone: '',
     date_of_birth: '',
-    postcode: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -95,12 +94,6 @@ const WorkerRegistration = () => {
           if (age > 100) error = 'Please enter a valid date';
         }
         break;
-      case 'postcode':
-        if (!value) error = 'Postcode is required';
-        else if (!/^[A-Z]{1,2}[0-9]{1,2}[A-Z]?\s?[0-9][A-Z]{2}$/i.test(value)) {
-          error = 'Please enter a valid UK postcode';
-        }
-        break;
       default:
         break;
     }
@@ -129,7 +122,7 @@ const WorkerRegistration = () => {
         }
       });
     } else if (step === 2) {
-      ['phone', 'date_of_birth', 'postcode'].forEach(field => {
+      ['phone', 'date_of_birth'].forEach(field => {
         if (!validateField(field, formData[field])) {
           stepErrors[field] = errors[field] || 'Required';
         }
@@ -175,7 +168,6 @@ const WorkerRegistration = () => {
         last_name: formData.last_name,
         phone: formData.phone,
         date_of_birth: formData.date_of_birth,
-        postcode: formData.postcode,
       }));
       navigate('/verify-email');
     }
@@ -431,27 +423,6 @@ const WorkerRegistration = () => {
                       <p className="mt-1 text-sm text-red-600">{errors.date_of_birth}</p>
                     )}
                   </div>
-
-                  {/* Postcode */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Postcode *
-                    </label>
-                    <input
-                      type="text"
-                      name="postcode"
-                      value={formData.postcode}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all ${
-                        errors.postcode && touched.postcode ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="SW1A 1AA"
-                    />
-                    {errors.postcode && touched.postcode && (
-                      <p className="mt-1 text-sm text-red-600">{errors.postcode}</p>
-                    )}
-                  </div>
                 </div>
               )}
 
@@ -478,11 +449,11 @@ const WorkerRegistration = () => {
                         <p className="text-sm text-gray-500">Date of Birth</p>
                         <p className="font-medium text-charcoal-900">{formData.date_of_birth}</p>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Postcode</p>
-                        <p className="font-medium text-charcoal-900">{formData.postcode}</p>
-                      </div>
                     </div>
+
+                    <p className="text-sm text-gray-500 italic mt-4">
+                      You'll complete your address details during profile setup
+                    </p>
                   </div>
 
                   {/* Terms */}

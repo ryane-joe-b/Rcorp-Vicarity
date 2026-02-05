@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/shared/ProtectedRoute';
+import OnboardingErrorBoundary from './components/onboarding/OnboardingErrorBoundary';
 
 // Pages
 import LandingPage from './pages/landing/LandingPage';
@@ -34,7 +36,16 @@ function App() {
             <Route path="/verify-email" element={<EmailVerification />} />
 
             {/* Onboarding Routes */}
-            <Route path="/complete-profile" element={<WorkerOnboarding />} />
+            <Route
+              path="/complete-profile"
+              element={
+                <ProtectedRoute requireRole="worker">
+                  <OnboardingErrorBoundary>
+                    <WorkerOnboarding />
+                  </OnboardingErrorBoundary>
+                </ProtectedRoute>
+              }
+            />
 
             {/* Fallback - 404 */}
             <Route path="*" element={<LandingPage />} />

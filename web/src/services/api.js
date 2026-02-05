@@ -112,6 +112,24 @@ export const authApi = {
     const response = await api.get('/auth/me');
     return response.data;
   },
+
+  resendVerificationEmail: async (email) => {
+    const response = await api.post(`/auth/resend-verification?email=${encodeURIComponent(email)}`);
+    return response.data;
+  },
+};
+
+// Worker API endpoints
+export const workerApi = {
+  getProfile: async () => {
+    const response = await api.get('/worker/profile');
+    return response.data;
+  },
+
+  updateProfile: async (profileData) => {
+    const response = await api.put('/worker/profile', profileData);
+    return response.data;
+  },
 };
 
 export default api;

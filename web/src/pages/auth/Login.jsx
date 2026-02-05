@@ -15,7 +15,7 @@ import Container from '../../components/shared/Container';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, loading, error: authError } = useAuth();
+  const { login, resendVerificationEmail, loading, error: authError } = useAuth();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -24,6 +24,9 @@ const Login = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
 
   // Handle input change
   const handleChange = (e) => {
@@ -70,7 +73,8 @@ const Login = () => {
       const user = result.user;
 
       if (!user.email_verified) {
-        navigate('/verify-email');
+        // Show verification prompt instead of navigating
+        setShowVerificationPrompt(true);
       } else if (user.role === 'worker') {
         // Check if profile is complete
         if (user.profile_completion_percentage < 100) {
@@ -83,6 +87,20 @@ const Login = () => {
       } else {
         navigate('/dashboard');
       }
+    }
+  };
+
+  // Handle resend verification email
+  const handleResendVerification = async () => {
+    setResendingEmail(true);
+    setResendMessage('');
+    const result = await resendVerificationEmail(formData.email);
+    setResendingEmail(false);
+
+    if (result.success) {
+      setResendMessage('✓ Verification email sent! Please check your inbox.');
+    } else {
+      setResendMessage('Failed to send email. Please try again.');
     }
   };
 
@@ -195,6 +213,36 @@ const Login = () => {
               {authError && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                   {authError}
+                </div>
+              )}
+
+              {/* Email Verification Prompt */}
+              {showVerificationPrompt && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-amber-900 mb-1">Email Not Verified</h3>
+                      <p className="text-sm text-amber-700 mb-3">
+                        Please verify your email address before logging in. Check your inbox for the verification link.
+                      </p>
+                      {resendMessage && (
+                        <p className={`text-sm mb-2 ${resendMessage.includes('✓') ? 'text-green-700' : 'text-red-700'}`}>
+                          {resendMessage}
+                        </p>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleResendVerification}
+                        disabled={resendingEmail}
+                        className="text-sm text-ocean-600 hover:text-ocean-700 font-semibold disabled:opacity-50"
+                      >
+                        {resendingEmail ? 'Sending...' : 'Resend Verification Email'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 

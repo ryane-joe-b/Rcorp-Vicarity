@@ -76,17 +76,27 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('refresh_token', response.refresh_token);
       }
 
-      // Build user object from login response
-      const userData = {
-        id: response.user_id,
-        email: email,
-        role: response.user_type, // Backend returns 'user_type', we use 'role' internally
-        email_verified: response.email_verified,
-        profile_completion_percentage: response.profile_complete ? 100 : 0,
-      };
-
-      setUser(userData);
-      return { success: true, user: userData };
+      // Fetch complete user profile with actual completion percentage
+      try {
+        const fullUser = await authApi.getCurrentUser();
+        const userData = {
+          ...fullUser,
+          role: fullUser.role || fullUser.user_type,
+        };
+        setUser(userData);
+        return { success: true, user: userData };
+      } catch (profileErr) {
+        // If profile fetch fails, use data from login response
+        const userData = {
+          id: response.user_id,
+          email: email,
+          role: response.user_type,
+          email_verified: response.email_verified,
+          profile_completion_percentage: 0,
+        };
+        setUser(userData);
+        return { success: true, user: userData };
+      }
     } catch (err) {
       const errorMessage = err.response?.data?.detail || 'Login failed';
       setError(errorMessage);
@@ -123,6 +133,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  /**
+   * Resend verification email
+   */
+  const resendVerificationEmail = async (email) => {
+    try {
+      setError(null);
+      const response = await authApi.resendVerificationEmail(email);
+      return { success: true, message: response.message || 'Verification email sent' };
+    } catch (err) {
+      const errorMessage = err.response?.data?.detail || 'Failed to send verification email';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -131,6 +156,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     verifyEmail,
+    resendVerificationEmail,
     isAuthenticated: !!user,
   };
 

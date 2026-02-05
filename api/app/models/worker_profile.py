@@ -60,8 +60,14 @@ class WorkerProfile(Base):
     address_line_1 = Column(String(255), nullable=True)
     address_line_2 = Column(String(255), nullable=True)
     city = Column(String(100), nullable=True)
+    county = Column(String(100), nullable=True)
     postcode = Column(String(20), nullable=True)
-    
+
+    # Emergency Contact (Optional)
+    emergency_contact_name = Column(String(200), nullable=True)
+    emergency_contact_phone = Column(String(20), nullable=True)
+    emergency_contact_relationship = Column(String(50), nullable=True)
+
     # Qualifications (Step 2 - 30%)
     dbs_status = Column(Enum(DBSStatus), default=DBSStatus.NOT_CHECKED, nullable=False)
     dbs_certificate_number = Column(String(50), nullable=True)

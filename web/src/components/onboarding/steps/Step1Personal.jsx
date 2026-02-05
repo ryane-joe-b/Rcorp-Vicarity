@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { debounce } from 'lodash';
+import { workerApi } from '../../../services/api';
 import CameraUpload from '../CameraUpload';
 import PostcodeLookup from '../PostcodeLookup';
 
@@ -29,7 +30,7 @@ const Step1Personal = ({ initialData = {}, onComplete, onBack, updateCompletion 
     last_name: initialData.last_name || '',
     phone: initialData.phone || '',
     date_of_birth: initialData.date_of_birth || '',
-    profile_photo_url: initialData.profile_photo_url || '',
+    profile_picture_url: initialData.profile_picture_url || '',
     postcode: initialData.postcode || '',
     address_line_1: initialData.address_line_1 || '',
     address_line_2: initialData.address_line_2 || '',
@@ -72,8 +73,8 @@ const Step1Personal = ({ initialData = {}, onComplete, onBack, updateCompletion 
 
       case 'phone':
         if (!value) error = 'Phone number is required';
-        else if (!/^(\+44\s?7\d{3}|\(?07\d{3}\)?)\s?\d{3}\s?\d{3}$/.test(value)) {
-          error = 'Please enter a valid UK mobile number';
+        else if (!/^(\+44\s?[1-9]\d{1,4}\s?\d{3,4}\s?\d{3,4}|0[1-9]\d{8,9})$/.test(value.replace(/\s/g, ''))) {
+          error = 'Please enter a valid UK phone number';
         }
         break;
 
@@ -201,13 +202,22 @@ const Step1Personal = ({ initialData = {}, onComplete, onBack, updateCompletion 
     debounce(async () => {
       setSaving(true);
       try {
-        // TODO: Call PUT /api/worker/profile with formData
+        // Save to backend
+        await workerApi.updateProfile(formData);
+        // Also save to localStorage as backup
         saveToLocalStorage();
-        console.log('Auto-saved:', formData);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('Auto-saved to backend and localStorage');
       } catch (err) {
         console.error('Auto-save failed:', err);
+        // Still save to localStorage even if API fails
+        saveToLocalStorage();
+
+        // Handle specific error cases
+        if (err.response?.status === 401) {
+          console.warn('Session expired, data saved locally only');
+        } else if (err.response?.status === 404) {
+          console.error('Worker profile not found');
+        }
       } finally {
         setSaving(false);
       }
@@ -219,16 +229,19 @@ const Step1Personal = ({ initialData = {}, onComplete, onBack, updateCompletion 
   const handleAddressSelect = (address) => {
     setFormData(prev => ({
       ...prev,
-      address_line_1: address.line_1 || '',
-      address_line_2: address.line_2 || '',
-      city: address.city || '',
-      county: address.county || '',
+      // Only update fields that are actually provided in the address object
+      // This prevents overwriting existing values with empty strings
+      ...(address.address_line_1 !== undefined && { address_line_1: address.address_line_1 }),
+      ...(address.address_line_2 !== undefined && { address_line_2: address.address_line_2 }),
+      ...(address.city !== undefined && { city: address.city }),
+      ...(address.county !== undefined && { county: address.county }),
+      ...(address.postcode !== undefined && { postcode: address.postcode }),
     }));
   };
 
   // Handle photo upload
   const handlePhotoUpload = (photoUrl) => {
-    setFormData(prev => ({ ...prev, profile_photo_url: photoUrl }));
+    setFormData(prev => ({ ...prev, profile_picture_url: photoUrl }));
   };
 
   // Validate all required fields
@@ -260,7 +273,7 @@ const Step1Personal = ({ initialData = {}, onComplete, onBack, updateCompletion 
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -270,8 +283,29 @@ const Step1Personal = ({ initialData = {}, onComplete, onBack, updateCompletion 
       return;
     }
 
-    // Pass data to parent
-    onComplete(formData);
+    try {
+      // Save to backend before moving to next step
+      setSaving(true);
+      await workerApi.updateProfile(formData);
+
+      // Clear localStorage after successful save
+      localStorage.removeItem('worker_profile_step1');
+      localStorage.removeItem('pending_worker_profile');
+
+      // Pass data to parent
+      onComplete(formData);
+    } catch (err) {
+      console.error('Failed to save profile:', err);
+      // Show error to user but still allow progression if data is in localStorage
+      const shouldContinue = window.confirm(
+        'Failed to save to server. Your data is saved locally. Continue anyway?'
+      );
+      if (shouldContinue) {
+        onComplete(formData);
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -286,7 +320,7 @@ const Step1Personal = ({ initialData = {}, onComplete, onBack, updateCompletion 
             <span className="ml-auto text-xs text-gray-500 font-normal">(Optional)</span>
           </h3>
           <CameraUpload
-            currentPhoto={formData.profile_photo_url}
+            currentPhoto={formData.profile_picture_url}
             onPhotoChange={handlePhotoUpload}
           />
         </div>

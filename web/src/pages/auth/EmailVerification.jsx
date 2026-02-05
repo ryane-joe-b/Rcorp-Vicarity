@@ -39,14 +39,22 @@ const EmailVerification = () => {
 
     if (result.success) {
       setStatus('success');
-      setMessage('Email verified successfully! Redirecting...');
+      setMessage('Email verified successfully! Redirecting to login...');
 
       // Redirect after 2 seconds
       setTimeout(() => {
-        if (user?.role === 'worker') {
-          navigate('/complete-profile');
+        // If user is logged in, redirect based on role and profile completion
+        if (user) {
+          if (user.role === 'worker' && user.profile_completion_percentage < 100) {
+            navigate('/complete-profile');
+          } else if (user.role === 'worker') {
+            navigate('/dashboard/worker');
+          } else {
+            navigate('/dashboard/care-home');
+          }
         } else {
-          navigate('/dashboard');
+          // If not logged in, redirect to login page
+          navigate('/login');
         }
       }, 2000);
     } else {

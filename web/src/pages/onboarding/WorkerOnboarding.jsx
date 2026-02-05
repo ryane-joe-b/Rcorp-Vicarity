@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { workerApi } from '../../services/api';
 import Container from '../../components/shared/Container';
 import ProgressStepper from '../../components/onboarding/ProgressStepper';
 import Step1Personal from '../../components/onboarding/steps/Step1Personal';
@@ -31,33 +31,38 @@ const STEPS = [
 
 const WorkerOnboarding = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [profileData, setProfileData] = useState({});
   const [completionPercentage, setCompletionPercentage] = useState(0);
 
-  // Redirect if not authenticated or not a worker
+  // Load profile data from backend and localStorage
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-    } else if (user.role !== 'worker') {
-      navigate('/dashboard');
-    }
-  }, [user, navigate]);
-
-  // Load any pending profile data from registration
-  useEffect(() => {
-    const pendingData = localStorage.getItem('pending_worker_profile');
-    if (pendingData) {
+    const loadProfileData = async () => {
       try {
-        const data = JSON.parse(pendingData);
-        setProfileData(data);
-        // Clear after loading
-        localStorage.removeItem('pending_worker_profile');
+        // Try to load from backend first
+        const profile = await workerApi.getProfile();
+        setProfileData(profile);
+        setCurrentStep(profile.current_step || 1);
+        setCompletionPercentage(profile.profile_completion_percentage || 0);
       } catch (err) {
-        console.error('Failed to load pending profile data:', err);
+        console.error('Failed to load profile from backend:', err);
+
+        // Fall back to localStorage if backend fails
+        const pendingData = localStorage.getItem('pending_worker_profile');
+        if (pendingData) {
+          try {
+            const data = JSON.parse(pendingData);
+            setProfileData(data);
+            // Clear after loading
+            localStorage.removeItem('pending_worker_profile');
+          } catch (parseErr) {
+            console.error('Failed to parse pending profile data:', parseErr);
+          }
+        }
       }
-    }
+    };
+
+    loadProfileData();
   }, []);
 
   const handleStepComplete = (stepData) => {

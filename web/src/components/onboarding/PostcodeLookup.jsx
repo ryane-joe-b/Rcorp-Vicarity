@@ -42,16 +42,15 @@ const PostcodeLookup = ({
       if (response.data.status === 200 && response.data.result) {
         const result = response.data.result;
 
-        // Create a structured address object
+        // Create a structured address object (only include fields we have data for)
+        // Note: postcodes.io doesn't provide street addresses, so we don't overwrite those
         const address = {
-          line_1: '', // Postcodes.io doesn't provide street addresses
-          line_2: '',
           city: result.admin_district || result.parish || '',
           county: result.admin_county || result.region || '',
           postcode: result.postcode,
         };
 
-        // Auto-fill what we have
+        // Auto-fill what we have (city, county, postcode only)
         onAddressSelect(address);
 
         // Show info message
