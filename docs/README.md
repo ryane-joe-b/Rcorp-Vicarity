@@ -180,22 +180,25 @@ Workers must complete their profile (4 steps) before accessing jobs:
 
 ## Development Status
 
-**Current Phase**: MVP Development - Landing Page Phase 1 Complete
+**Current Phase**: MVP Development - Authentication & Onboarding
 
 | Component | Status | Completion | Notes |
 |-----------|--------|------------|-------|
-| Backend API | ✅ Complete | 100% | All auth endpoints + public stats API working |
-| Database | ✅ Complete | 100% | Schema designed, needs migrations |
-| Infrastructure | ✅ Complete | 100% | CI/CD pipeline functional and hardened |
-| **Landing Page** | 🚧 Phase 1 | 60% | Hero, Stats, ValueProp, CTA, Footer live |
+| Backend API | ✅ Complete | 100% | All auth endpoints + worker profile endpoints working |
+| Database | ✅ Complete | 100% | Migrations automated in CI/CD |
+| Infrastructure | ✅ Complete | 100% | CI/CD with auto-migrations |
+| **Landing Page** | ✅ Complete | 100% | All sections live with real-time stats |
 | SSL | ✅ Complete | 100% | Let's Encrypt configured, auto-renewal working |
-| Auth Pages | ⏸️ Not Started | 0% | Registration, Login, Verify Email |
-| Worker Dashboard | ⏸️ Not Started | 0% | Profile wizard, job board |
+| **Authentication** | ✅ Complete | 100% | Register, Login, Email Verification, Smart Routing |
+| **Worker Onboarding** | 🚧 In Progress | 25% | Step 1 complete, Steps 2-4 pending |
+| Worker Dashboard | ⏸️ Not Started | 0% | Job board, applications |
 | Care Home Dashboard | ⏸️ Not Started | 0% | Post shifts, browse workers |
 
-**Landing Page Breakdown:**
-- Phase 1 (60%): ✅ Core sections + real-time stats integration
-- Phase 2 (40%): ⏸️ How It Works, Trust, Testimonials, FAQ, Qualifications
+**Worker Onboarding Breakdown:**
+- Step 1 (20%): ✅ Personal details with postcode lookup + API integration
+- Step 2 (30%): ⏸️ Qualifications & DBS
+- Step 3 (25%): ⏸️ Skills & Experience
+- Step 4 (25%): ⏸️ Availability & Preferences
 
 See [PROJECT_STATUS.md](../vibe/PROJECT_STATUS.md) for detailed progress.  
 See [LANDING_PAGE_TODO.md](../vibe/LANDING_PAGE_TODO.md) for Phase 2 tasks.
@@ -248,7 +251,7 @@ We welcome contributions! Please:
 
 ---
 
-**Last Updated**: January 27, 2026  
-**Version**: 1.1.0 (Landing Page Phase 1 Complete)
+**Last Updated**: February 5, 2026
+**Version**: 1.2.0 (Authentication Complete + Worker Onboarding Step 1 Live)
 
 Built with care for the care industry 💚🧡

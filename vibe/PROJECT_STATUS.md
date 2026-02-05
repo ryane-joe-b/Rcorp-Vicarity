@@ -1,9 +1,9 @@
 # VICARITY - PROJECT STATUS
 
-**Date:** January 27, 2026  
-**Domain:** vicarity.co.uk  
-**Status:** Backend Live, Landing Page Complete (Phase 1 & 2)  
-**Recent Update:** Landing Page Phase 2 completed - all 6 major sections now live
+**Date:** February 5, 2026
+**Domain:** vicarity.co.uk
+**Status:** Backend Live, Landing Page Complete, Authentication Flow Complete, Worker Onboarding Step 1 Live
+**Recent Update:** Complete authentication flow + Worker onboarding wizard Step 1 with API integration deployed to production
 
 ---
 
@@ -209,8 +209,106 @@ Vicarity is a care worker marketplace platform connecting qualified care workers
 See `vibe/LANDING_PAGE_TODO.md` for detailed Phase 3 tasks:
 - Mobile menu smooth animations
 - Loading skeletons
-- Error boundaries
-- Connect CTAs to auth flow (requires auth pages first)
+
+---
+
+### 4. Authentication Flow - Complete (100%) ✅
+
+**Location:** `/web/src/pages/auth`, `/web/src/contexts`
+**Status:** ✅ Live at https://vicarity.co.uk
+**Completed:** February 5, 2026
+
+#### Pages Built
+- **Worker Registration** - 3-step wizard (Personal, Contact, Review)
+- **Care Home Registration** - Single comprehensive form
+- **Login** - Email/password with smart routing
+- **Email Verification** - Auto-verify from link + resend option
+- **Protected Routes** - Role-based access control
+
+#### Authentication Features
+- **JWT Token Management** - Access (30min) + Refresh (7 days) tokens stored in localStorage
+- **AuthContext** - Global auth state with login, register, logout, verifyEmail, resendVerificationEmail
+- **Smart Routing** - Auto-redirect based on:
+  - Email not verified → Show resend prompt in login
+  - Email verified + worker + incomplete → `/complete-profile`
+  - Email verified + worker + complete → `/dashboard/worker`
+  - Email verified + care home → `/dashboard/care-home`
+- **Protected Routes** - ProtectedRoute component with role checking
+- **API Integration** - axios interceptors for auth headers, error handling
+
+#### User Experience Improvements
+- Real-time form validation with visual feedback
+- Password strength indicator
+- "Remember me" functionality
+- Resend verification email from login page
+- Auto-redirect after email verification
+- Loading states and error boundaries
+- Mobile-optimized with 44px+ touch targets
+
+#### Postcode Handling
+- Removed postcode from registration (Step 2)
+- Now collected in Worker Onboarding Step 1 with lookup functionality
+- Users informed: "You'll complete your address details during profile setup"
+
+---
+
+### 5. Worker Onboarding Wizard - Step 1 Complete (25%) ✅
+
+**Location:** `/web/src/pages/onboarding`, `/web/src/components/onboarding`
+**Status:** ✅ Live at https://vicarity.co.uk/complete-profile
+**Completed:** February 5, 2026
+
+#### Step 1: Personal Details (20% weight)
+**Status:** ✅ Complete and deployed
+
+**Fields Collected:**
+- First name, last name
+- Phone number (UK landlines + mobiles)
+- Date of birth (18+ validation)
+- Profile photo (webcam capture or file upload)
+- Address (postcode lookup with auto-fill)
+- Emergency contact (optional, collapsible)
+
+**Features:**
+- **UK Postcode Lookup** - Uses free postcodes.io API to auto-fill city and county
+- **Profile Photo Upload** - Webcam capture OR file upload with circular preview
+- **Real-time Validation** - Visual feedback with green checkmarks
+- **Auto-save** - Debounced save to backend every 1 second
+- **API Integration** - Calls `PUT /api/worker/profile` with proper error handling
+- **Progress Tracking** - Shows 20% completion when all required fields valid
+- **Mobile-First** - 44px touch targets, responsive design
+- **Error Boundary** - Graceful error handling with retry option
+- **Load Existing Data** - Fetches profile from backend on page load
+
+**Backend Integration:**
+- `GET /api/worker/profile` - Load existing profile data
+- `PUT /api/worker/profile` - Auto-save on blur (debounced)
+- Emergency contact fields added to database schema
+- County field added for complete UK addresses
+
+#### Remaining Steps (TODO)
+- Step 2: Qualifications (30% weight) - Not started
+- Step 3: Skills & Experience (25% weight) - Not started
+- Step 4: Availability & Preferences (25% weight) - Not started
+
+---
+
+### 6. Database Migrations - Automated ✅
+
+**Location:** `/api/alembic/versions`
+**Status:** ✅ Automated in GitHub Actions workflow
+
+#### Migration Setup
+- Created migration: `001_add_emergency_contact_and_county.py`
+- Adds emergency contact fields (name, phone, relationship)
+- Adds county field to worker_profiles table
+- Migration script: `run-migrations.sh` for manual runs
+
+#### Automated Deployment
+- Migrations run automatically on every deployment
+- GitHub Actions runs `alembic upgrade head` after services start
+- Idempotent - only applies new migrations
+- Non-blocking - deployment continues even if no migrations needed
 
 ---
 
@@ -218,95 +316,70 @@ See `vibe/LANDING_PAGE_TODO.md` for detailed Phase 3 tasks:
 
 ### HIGH PRIORITY
 
-#### 1. Frontend Authentication Flow (Next Major Milestone)
-**Status:** Not Started  
-**Estimated Time:** 15-20 hours
+#### 1. Worker Onboarding - Steps 2, 3, 4 (Next Major Milestone)
+**Status:** Step 1 Complete, Steps 2-4 Not Started
+**Estimated Time:** 12-16 hours
 
-**Tasks:**
-- Build registration pages (worker vs care home selection)
-- Login page with email/password
-- Email verification page
-- Password reset flow pages
-- Protected routes setup
-- Authentication context (React Context API)
-- Token storage and management
-- Redirect logic based on role and profile completion
-- Connect landing page CTAs to auth flow
+**Step 2: Qualifications (30% weight)**
+- DBS check status and details
+- DBS certificate number, issue/expiry dates
+- Qualifications multi-select (fetch from `/api/qualifications`)
+- Right to work in UK
+- Professional registration number
+- Document uploads (DBS certificate, qualifications)
 
-**Documentation Needed:**
-- Authentication flow diagrams
-- Route protection patterns
-- User journey maps
+**Step 3: Skills & Experience (25% weight)**
+- Years of experience (dropdown)
+- Care settings worked in (checkboxes)
+- Specializations (elderly, dementia, etc.)
+- Languages spoken
+- Soft skills
+- Brief bio (200-500 chars)
 
-#### 2. Database Setup
-**Location:** On production VPS
+**Step 4: Availability & Preferences (25% weight)**
+- Preferred shift types (day, night, weekend)
+- Available days of week
+- Hours per week seeking
+- Travel radius (miles)
+- Hourly rate range
+- Has own transport
+- Available start date
 
-**Tasks:**
-```bash
-# Generate initial migration
-docker compose -f docker-compose.production.yml exec api \
-  alembic revision --autogenerate -m "Initial schema"
-
-# Apply migration
-docker compose -f docker-compose.production.yml exec api \
-  alembic upgrade head
-
-# Seed qualifications data
-docker compose -f docker-compose.production.yml exec api python -c \
-  "from app.models.qualification import seed_qualifications; \
-   from app.core.database import SessionLocal; \
-   db = SessionLocal(); seed_qualifications(db); db.close()"
-```
-
-**Why it matters:** Currently using `Base.metadata.create_all()` which isn't production-ready.
+**Features Needed:**
+- Progress bar updates on each step
+- Save draft functionality
+- Validation before next step
+- Final "Submit Profile" triggers 100% completion
+- Backend API integration for each step
 
 ---
 
-#### 2. ~~SSL Certificate Setup~~ ✅ COMPLETED
-**Status:** ✅ Done - SSL certificates configured and working
-- HTTPS working at https://vicarity.co.uk
-- HTTP automatically redirects to HTTPS
-- Auto-renewal configured
+#### 2. Password Reset Flow
+**Status:** Not Started
+**Estimated Time:** 3-4 hours
+
+**Pages needed:**
+- `/forgot-password` - Request reset email
+- `/reset-password` - Set new password with token
+
+**Backend:** Already implemented (`/api/auth/password-reset-request`, `/api/auth/password-reset-confirm`)
 
 ---
 
-#### 3. Frontend Authentication Infrastructure
-**Location:** `/web/src`
+#### 3. Profile Photo Upload to Cloudinary/S3
+**Status:** Not Started (currently base64 preview only)
+**Estimated Time:** 4-6 hours
 
-**Files to create:**
-
-**`src/contexts/AuthContext.jsx`**
-- JWT token storage (localStorage)
-- Auto-refresh logic (before 30min expiry)
-- Login/logout/register functions
-- Current user state
-- Profile completion tracking
-
-**`src/services/api.js`**
-- Axios instance with base URL
-- Request interceptor (add JWT to headers)
-- Response interceptor (handle 401, trigger refresh)
-- API call wrappers for all endpoints
-
-**`src/components/ProtectedRoute.jsx`**
-- Smart routing based on:
-  - Not logged in → `/login`
-  - Logged in, email not verified → `/verify-email`
-  - Worker, profile incomplete → `/complete-profile`
-  - Worker, profile complete → `/dashboard/worker`
-  - Care home → `/dashboard/care-home`
-
-**`src/utils/validators.js`**
-- Email validation
-- Password strength checking (8+ chars, uppercase, lowercase, number, special)
-- Form validation helpers
+**Tasks:**
+- Set up Cloudinary account or S3 bucket
+- Create upload endpoint in backend
+- Update CameraUpload component to upload file
+- Return CDN URL to store in profile_picture_url
+- Add image optimization (resize, compress)
 
 ---
 
 ### MEDIUM PRIORITY
-
-#### 4. Landing Page
-**File:** `src/pages/LandingPage.jsx`
 
 **Sections:**
 - Hero with dual CTAs:
@@ -325,77 +398,7 @@ docker compose -f docker-compose.production.yml exec api python -c \
 
 ---
 
-#### 5. Registration Flow
-**Pages needed:**
-
-**`src/pages/auth/RoleSelection.jsx`**
-- Two large cards: "I'm a Care Worker" vs "I'm a Care Home"
-- Sets role in state, redirects to `/register`
-
-**`src/pages/auth/Register.jsx`**
-- Email input
-- Password input (with strength indicator)
-- Confirm password
-- Role pre-selected from previous page
-- "Already have an account?" → `/login`
-- On success → `/verify-email`
-
-**`src/pages/auth/VerifyEmail.jsx`**
-- Shows: "Check your email for verification link"
-- Token auto-read from URL query param
-- "Resend verification email" button
-- Auto-redirect to profile completion after verification
-
-**`src/pages/auth/Login.jsx`**
-- Email + password
-- "Forgot password?" → `/reset-password`
-- On success → smart redirect via ProtectedRoute logic
-
-**`src/pages/auth/ResetPassword.jsx`**
-- Request page: Email input → sends reset email
-- Confirm page: New password input → resets password
-
----
-
-#### 6. Worker Profile Wizard
-**File:** `src/pages/worker/CompleteProfileWizard.jsx`
-
-**4-Step Form:**
-
-**Step 1: Personal Information (20%)**
-- First name, last name
-- Phone number
-- Date of birth
-- Address (postcode lookup API?)
-- Profile photo upload (optional)
-
-**Step 2: Experience (30%)**
-- Years of experience (dropdown: 0-1, 1-3, 3-5, 5-10, 10+)
-- Current employment status (employed, self-employed, unemployed, student)
-- Care settings worked in (checkboxes: residential, nursing, domiciliary, hospital, hospice)
-- Brief bio (textarea, 200-500 chars)
-
-**Step 3: Qualifications (25%)**
-- Qualifications multi-select (fetch from `/api/qualifications`)
-- DBS check status (yes/no, expiry date)
-- Right to work in UK (yes/no)
-- Professional registration number (if applicable)
-
-**Step 4: Availability (25%)**
-- Preferred shift types (day, night, weekend)
-- Hours per week seeking
-- Available start date
-- Willing to travel (radius in miles)
-
-**Features:**
-- Progress bar (updates on each step)
-- Save draft functionality
-- Validation before next step
-- Final "Submit Profile" triggers 100% completion
-
----
-
-#### 7. Care Home Profile Form
+#### 4. Care Home Profile Form
 **File:** `src/pages/care-home/CompleteProfile.jsx`
 
 **Single Form:**
@@ -416,7 +419,7 @@ docker compose -f docker-compose.production.yml exec api python -c \
 
 ### LOW PRIORITY
 
-#### 8. Worker Dashboard
+#### 5. Worker Dashboard (Placeholder)
 **File:** `src/pages/worker/WorkerDashboard.jsx`
 
 **For now (placeholder):**
@@ -433,7 +436,7 @@ docker compose -f docker-compose.production.yml exec api python -c \
 
 ---
 
-#### 9. Care Home Dashboard
+#### 6. Care Home Dashboard (Placeholder)
 **File:** `src/pages/care-home/CareHomeDashboard.jsx`
 
 **For now (placeholder):**
@@ -568,17 +571,23 @@ vicarity/
 
 ## 📊 NEXT SESSION PRIORITIES
 
-1. **Run database migrations** (5 mins)
-2. ~~**Set up SSL certificate**~~ ✅ DONE
-3. **Build auth infrastructure** (1-2 hours)
-   - AuthContext
-   - API service
-   - ProtectedRoute
-4. **Create landing page** (1 hour)
-5. **Build registration flow** (2-3 hours)
-6. **Worker profile wizard** (3-4 hours)
+1. **Worker Onboarding Steps 2-4** (12-16 hours)
+   - Step 2: Qualifications with DBS and certifications
+   - Step 3: Skills & Experience with bio
+   - Step 4: Availability & Preferences
+2. **Password Reset Flow** (3-4 hours)
+   - Forgot password page
+   - Reset password with token validation
+3. **Profile Photo Upload to Cloudinary** (4-6 hours)
+   - Backend upload endpoint
+   - Cloudinary integration
+   - Image optimization
+4. **Care Home Profile Completion** (6-8 hours)
+   - Single comprehensive form
+   - CQC validation
+   - Logo upload
 
-**Estimated time to MVP:** 7-11 hours of focused development (SSL already done!)
+**Estimated time to complete onboarding:** 25-34 hours of focused development
 
 ---
 
@@ -590,9 +599,10 @@ Every push to `main` automatically:
 3. SSHs to production VPS
 4. Pulls latest code
 5. Builds new Docker images
-6. Performs rolling update (zero downtime)
-7. Runs health checks
-8. Auto-rolls back if health checks fail
+6. Starts all services
+7. **Runs database migrations** (`alembic upgrade head`) ✨ NEW
+8. Runs health checks
+9. Auto-rolls back if health checks fail
 
 **To deploy manually:**
 ```bash
@@ -608,36 +618,46 @@ git push origin main
 
 ### What's Working Well
 - Backend API is solid and production-ready
-- CI/CD pipeline is reliable
+- CI/CD pipeline is reliable with automated migrations
 - Docker setup is clean and maintainable
-- Database schema is well-designed
+- Authentication flow is complete and working
+- Worker Onboarding Step 1 fully integrated with backend
+- Database migrations automated in deployment
+- Smart routing based on user state
 
 ### Known Issues
-- Frontend is basically empty (expected - in progress)
-- Using `create_all()` instead of migrations (easy fix, low priority)
+- Profile photo upload uses base64 (needs Cloudinary/S3 integration)
 - No actual tests yet (placeholder workflow, medium priority)
+- Worker onboarding only Step 1 complete (Steps 2-4 needed)
+- Password reset pages not built (backend ready)
 
-### Recently Resolved (Jan 26, 2026)
-- ✅ SSL certificates configured and working
-- ✅ Deployment validation prevents malformed secrets
-- ✅ Enhanced error diagnostics for faster debugging
-- ✅ Docker Compose warning removed
+### Recently Resolved (Feb 5, 2026)
+- ✅ Authentication flow complete (login, register, email verification)
+- ✅ Worker Onboarding Step 1 deployed with API integration
+- ✅ Database migrations automated in GitHub Actions
+- ✅ Emergency contact and county fields added to database
+- ✅ Postcode lookup fixed to not overwrite street addresses
+- ✅ Protected routes with role-based access control
+- ✅ Smart routing after login based on verification and completion status
+- ✅ Resend verification email from login page
 
 ### Technical Debt
-- None significant yet (project is new)
-- Will need proper test coverage as features grow
+- Profile photo upload needs cloud storage (currently base64)
+- Token refresh logic could be improved (currently works but basic)
+- Need to add proper test coverage
 - May want to add monitoring (Grafana/Prometheus) later
 
 ---
 
-**Last Updated:** January 26, 2026  
+**Last Updated:** February 5, 2026
 **Recent Changes:**
-- ✅ Deployment validation and error diagnostics improved
-- ✅ SSL certificates configured and working
-- ✅ Comprehensive troubleshooting documentation added
-- ✅ Deployment incident resolved (see `DEPLOYMENT_INCIDENT_2026_01_26.md`)
+- ✅ Complete authentication flow deployed to production
+- ✅ Worker Onboarding Step 1 live with full API integration
+- ✅ Database migrations automated in deployment workflow
+- ✅ Emergency contact and county fields added to worker profiles
+- ✅ Postcode removed from registration, now in onboarding with lookup
 
-**Next Review:** After frontend auth implementation
+**Next Review:** After Worker Onboarding Steps 2-4 implementation
 
 ---
 
