@@ -283,11 +283,20 @@ jobs:
             # Start all services
             echo "Starting all services..."
             docker compose -f docker-compose.production.yml up -d
-            
+
             # Wait for services to be ready
             echo "Waiting for services to start..."
             sleep 20
-            
+
+            # Run database migrations (safe to run every time - idempotent)
+            echo "=== Running database migrations ==="
+            docker compose -f docker-compose.production.yml exec -T api alembic upgrade head
+            if [ $? -eq 0 ]; then
+              echo "✅ Migrations completed successfully"
+            else
+              echo "⚠️  Migrations failed or none to apply"
+            fi
+
             # Verify deployment
             echo "=== Verifying deployment ==="
             
