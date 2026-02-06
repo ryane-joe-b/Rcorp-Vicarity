@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Container from '../../shared/Container';
 import PrimaryButton from '../../ui/buttons/PrimaryButton';
 import SecondaryButton from '../../ui/buttons/SecondaryButton';
@@ -8,6 +9,7 @@ import SecondaryButton from '../../ui/buttons/SecondaryButton';
  * Corporate professionalism with clear CTAs
  */
 const Navbar = () => {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -82,14 +84,14 @@ const Navbar = () => {
             <SecondaryButton
               variant="ocean"
               size="sm"
-              onClick={() => console.log('Login clicked')}
+              onClick={() => navigate('/login')}
             >
               Login
             </SecondaryButton>
             <PrimaryButton
               variant="terracotta"
               size="sm"
-              onClick={() => console.log('Get Started clicked')}
+              onClick={() => navigate('/register')}
             >
               Get Started
             </PrimaryButton>
@@ -151,7 +153,7 @@ const Navbar = () => {
                   variant="ocean"
                   fullWidth
                   onClick={() => {
-                    console.log('Login clicked');
+                    navigate('/login');
                     setIsMenuOpen(false);
                   }}
                 >
@@ -161,7 +163,7 @@ const Navbar = () => {
                   variant="terracotta"
                   fullWidth
                   onClick={() => {
-                    console.log('Get Started clicked');
+                    navigate('/register');
                     setIsMenuOpen(false);
                   }}
                 >
