@@ -252,6 +252,6 @@ We welcome contributions! Please:
 ---
 
 **Last Updated**: February 6, 2026
-**Version**: 1.3.0 (Authentication Complete + Worker Onboarding Complete - All 4 Steps Live)
+**Version**: 1.3.1 (Authentication Complete + Worker Onboarding Complete + UX Fixes Applied)
 
 Built with care for the care industry 💚🧡

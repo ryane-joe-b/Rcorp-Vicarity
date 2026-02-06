@@ -659,6 +659,12 @@ git push origin main
 - Worker dashboard placeholder only (job board needed)
 - Care home profile completion form not built yet
 
+### Fixed Issues (Feb 6, 2026)
+- ✅ Duplicate navigation buttons on onboarding steps
+- ✅ "Failed to save to server" error when clicking Next
+- ✅ Users always starting at Step 1 instead of incomplete step
+- ✅ Navbar Login/Get Started buttons not working
+
 ### Recently Resolved (Feb 6, 2026)
 - ✅ Worker Onboarding Wizard complete with all 4 steps
 - ✅ Step 2: Qualifications (DBS, right to work, certifications)
@@ -669,6 +675,14 @@ git push origin main
 - ✅ Real-time completion percentage calculation
 - ✅ Migration revision ID mismatch fixed
 - ✅ Database fields added for all onboarding steps (hours_per_week, available_start_date, hourly_rate_*_pence)
+
+### UX Fixes Applied (Feb 6, 2026 - Post-Deployment)
+- ✅ Removed duplicate navigation buttons from step components
+- ✅ Fixed "Failed to save to server" error on Next button click
+- ✅ Added auto-navigation to first incomplete step
+- ✅ Fixed navbar Login and Get Started buttons to actually navigate
+- ✅ Improved separation of concerns (steps = data, parent = navigation)
+- 📄 **Incident Report:** [ONBOARDING_UX_FIXES_2026_02_06.md](./ONBOARDING_UX_FIXES_2026_02_06.md)
 
 ### Technical Debt
 - Profile photo upload needs cloud storage (currently base64)
@@ -695,10 +709,13 @@ git push origin main
 
 ## 📚 ADDITIONAL DOCUMENTATION
 
+### Incident Reports
+- **`vibe/ONBOARDING_UX_FIXES_2026_02_06.md`** - Worker onboarding UX fixes (duplicate buttons, save errors, navigation)
+- **`vibe/DEPLOYMENT_INCIDENT_2026_01_26.md`** - Deployment pipeline incident and resolution
+
 ### Deployment & Operations
 - **`DEPLOYMENT_TROUBLESHOOTING.md`** - Comprehensive guide for deployment issues
 - **`DEPLOYMENT_FIX_SUMMARY.md`** - Technical analysis of deployment improvements
-- **`vibe/DEPLOYMENT_INCIDENT_2026_01_26.md`** - Incident report and resolution
 
 ### Project Documentation
 - **`docs/ARCHITECTURE.md`** - System architecture overview
