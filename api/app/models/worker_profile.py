@@ -89,11 +89,13 @@ class WorkerProfile(Base):
     # Availability & Preferences (Step 4 - 25%)
     available_days = Column(ARRAY(String), default=list, nullable=False)  # mon, tue, wed, etc.
     shift_types = Column(ARRAY(String), default=list, nullable=False)  # day, night, twilight, weekend
+    hours_per_week = Column(Integer, nullable=True)
     travel_radius_miles = Column(Integer, nullable=True)
-    hourly_rate_min = Column(Integer, nullable=True)  # in pence
-    hourly_rate_max = Column(Integer, nullable=True)  # in pence
+    hourly_rate_min_pence = Column(Integer, nullable=True)  # in pence
+    hourly_rate_max_pence = Column(Integer, nullable=True)  # in pence
     willing_to_travel = Column(Boolean, default=True, nullable=False)
     has_own_transport = Column(Boolean, default=False, nullable=False)
+    available_start_date = Column(Date, nullable=True)
     
     # Right to work
     right_to_work_status = Column(String(50), nullable=True)

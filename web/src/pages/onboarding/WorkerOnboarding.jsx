@@ -4,6 +4,9 @@ import { workerApi } from '../../services/api';
 import Container from '../../components/shared/Container';
 import ProgressStepper from '../../components/onboarding/ProgressStepper';
 import Step1Personal from '../../components/onboarding/steps/Step1Personal';
+import Step2Qualifications from '../../components/onboarding/steps/Step2Qualifications';
+import Step3Experience from '../../components/onboarding/steps/Step3Experience';
+import Step4Availability from '../../components/onboarding/steps/Step4Availability';
 
 /**
  * Worker Onboarding Wizard
@@ -65,6 +68,22 @@ const WorkerOnboarding = () => {
     loadProfileData();
   }, []);
 
+  // Refresh completion percentage when step changes
+  useEffect(() => {
+    const refreshCompletion = async () => {
+      try {
+        const profile = await workerApi.getProfile();
+        setCompletionPercentage(profile.profile_completion_percentage || 0);
+      } catch (err) {
+        console.error('Failed to refresh completion percentage:', err);
+      }
+    };
+
+    // Small delay to allow auto-save to complete
+    const timer = setTimeout(refreshCompletion, 1500);
+    return () => clearTimeout(timer);
+  }, [currentStep]);
+
   const handleStepComplete = (stepData) => {
     setProfileData(prev => ({ ...prev, ...stepData }));
 
@@ -77,27 +96,60 @@ const WorkerOnboarding = () => {
     }
   };
 
+  // Handle percentage update from individual steps
+  const handlePercentageChange = (stepPercentage) => {
+    // Each step reports its own completion, which is automatically calculated
+    // The backend calculates the total based on all steps
+    console.log(`Step ${currentStep} completion:`, stepPercentage);
+  };
+
+  // Navigate between steps
+  const handleNext = () => {
+    if (currentStep < 4) {
+      setCurrentStep(prev => prev + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // All steps complete - redirect to dashboard
+      navigate('/dashboard/worker');
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      navigate('/dashboard/worker');
+    }
+  };
+
   // Render current step component
   const renderStep = () => {
     switch (currentStep) {
       case 1:
         return (
           <Step1Personal
-            initialData={profileData}
-            onComplete={handleStepComplete}
-            onBack={() => navigate('/dashboard/worker')}
-            updateCompletion={setCompletionPercentage}
+            onPercentageChange={handlePercentageChange}
           />
         );
       case 2:
-        // TODO: Build Step 2
-        return <div className="text-center py-12">Step 2 - Qualifications (Coming soon)</div>;
+        return (
+          <Step2Qualifications
+            onPercentageChange={handlePercentageChange}
+          />
+        );
       case 3:
-        // TODO: Build Step 3
-        return <div className="text-center py-12">Step 3 - Skills & Experience (Coming soon)</div>;
+        return (
+          <Step3Experience
+            onPercentageChange={handlePercentageChange}
+          />
+        );
       case 4:
-        // TODO: Build Step 4
-        return <div className="text-center py-12">Step 4 - Availability (Coming soon)</div>;
+        return (
+          <Step4Availability
+            onPercentageChange={handlePercentageChange}
+          />
+        );
       default:
         return null;
     }
@@ -129,8 +181,34 @@ const WorkerOnboarding = () => {
           />
 
           {/* Current Step Content */}
-          <div className="mt-8">
+          <div className="mt-8 bg-white rounded-2xl shadow-healthcare border border-gray-100 p-6 md:p-8">
             {renderStep()}
+
+            {/* Navigation Buttons */}
+            <div className="mt-8 pt-6 border-t border-gray-200 flex items-center justify-between gap-4">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg
+                         hover:border-gray-400 hover:bg-gray-50 transition-all"
+              >
+                {currentStep === 1 ? 'Back to Dashboard' : 'Back'}
+              </button>
+
+              <div className="flex-1 text-center text-sm text-gray-500">
+                Step {currentStep} of 4
+              </div>
+
+              <button
+                type="button"
+                onClick={handleNext}
+                className="px-6 py-3 bg-gradient-to-r from-ocean-500 to-ocean-600
+                         hover:from-ocean-600 hover:to-ocean-700 text-white font-semibold
+                         rounded-lg shadow-lg transition-all hover:scale-105 active:scale-95"
+              >
+                {currentStep === 4 ? 'Finish & Go to Dashboard' : 'Next Step'}
+              </button>
+            </div>
           </div>
 
           {/* Trust Badges */}

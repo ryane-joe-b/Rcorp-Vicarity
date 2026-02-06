@@ -24,7 +24,7 @@ import PostcodeLookup from '../PostcodeLookup';
  * - Accessibility with ARIA labels
  */
 
-const Step1Personal = ({ initialData = {}, onComplete, onBack, updateCompletion }) => {
+const Step1Personal = ({ initialData = {}, onComplete, onBack, updateCompletion, onPercentageChange }) => {
   const [formData, setFormData] = useState({
     first_name: initialData.first_name || '',
     last_name: initialData.last_name || '',
@@ -188,8 +188,9 @@ const Step1Personal = ({ initialData = {}, onComplete, onBack, updateCompletion 
   // Update completion percentage
   useEffect(() => {
     const completion = calculateStepCompletion();
-    updateCompletion(completion);
-  }, [formData, calculateStepCompletion, updateCompletion]);
+    updateCompletion?.(completion);
+    onPercentageChange?.(completion);
+  }, [formData, calculateStepCompletion, updateCompletion, onPercentageChange]);
 
   // Auto-save to localStorage
   const saveToLocalStorage = () => {

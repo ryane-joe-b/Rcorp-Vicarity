@@ -33,6 +33,7 @@ class WorkerProfileUpdate(BaseModel):
     dbs_issue_date: Optional[date] = None
     dbs_expiry_date: Optional[date] = None
     dbs_document_url: Optional[str] = None
+    right_to_work_status: Optional[str] = None
     qualifications: Optional[List[Dict[str, Any]]] = None
     
     # Step 3
@@ -45,11 +46,13 @@ class WorkerProfileUpdate(BaseModel):
     # Step 4
     available_days: Optional[List[str]] = None
     shift_types: Optional[List[str]] = None
+    hours_per_week: Optional[int] = None
     travel_radius_miles: Optional[int] = None
-    hourly_rate_min: Optional[int] = None
-    hourly_rate_max: Optional[int] = None
+    hourly_rate_min_pence: Optional[int] = None
+    hourly_rate_max_pence: Optional[int] = None
     willing_to_travel: Optional[bool] = None
     has_own_transport: Optional[bool] = None
+    available_start_date: Optional[date] = None
     
     # Wizard step tracking
     current_step: Optional[int] = None
@@ -83,19 +86,24 @@ class WorkerProfileResponse(BaseModel):
     # Qualifications
     dbs_status: str
     dbs_expiry_date: Optional[date]
+    right_to_work_status: Optional[str]
     qualifications: List[Dict[str, Any]]
-    
+
     # Skills
     years_experience: Optional[str]
     specializations: List[str]
     languages: List[str]
+    soft_skills: List[str]
     bio: Optional[str]
-    
+
     # Availability
     available_days: List[str]
     shift_types: List[str]
+    hours_per_week: Optional[int]
     travel_radius_miles: Optional[int]
-    hourly_rate_min: Optional[int]
-    hourly_rate_max: Optional[int]
+    hourly_rate_min_pence: Optional[int]
+    hourly_rate_max_pence: Optional[int]
+    has_own_transport: Optional[bool]
+    available_start_date: Optional[date]
     
     model_config = {"from_attributes": True}
