@@ -537,28 +537,6 @@ const Step3Experience = ({ initialData = {}, onComplete, onBack, updateCompletio
           <span>Saving...</span>
         </div>
       )}
-
-      {/* Navigation Buttons */}
-      <div className="flex gap-4">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex-1 md:flex-none min-h-[44px] px-6 py-3 bg-white hover:bg-gray-50
-                   text-gray-700 font-semibold rounded-lg border border-gray-300
-                   transition-all active:scale-95"
-        >
-          ← Back
-        </button>
-
-        <button
-          type="submit"
-          className="flex-1 min-h-[44px] px-8 py-3 bg-gradient-to-r from-sage-500 to-sage-600
-                   hover:from-sage-600 hover:to-sage-700 text-white font-semibold
-                   rounded-lg shadow-lg transition-all hover:scale-105 active:scale-95"
-        >
-          Continue to Availability →
-        </button>
-      </div>
     </form>
   );
 };

@@ -38,6 +38,33 @@ const WorkerOnboarding = () => {
   const [profileData, setProfileData] = useState({});
   const [completionPercentage, setCompletionPercentage] = useState(0);
 
+  // Determine which step to show based on profile completion
+  const determineStartingStep = (profile) => {
+    // Check Step 1 fields (20%)
+    const step1Complete = profile.first_name && profile.last_name &&
+                         profile.phone && profile.date_of_birth;
+
+    if (!step1Complete) return 1;
+
+    // Check Step 2 fields (30%)
+    const step2Complete = profile.dbs_status && profile.dbs_status !== 'not_checked';
+
+    if (!step2Complete) return 2;
+
+    // Check Step 3 fields (25%)
+    const step3Complete = profile.years_experience && profile.bio;
+
+    if (!step3Complete) return 3;
+
+    // Check Step 4 fields (25%)
+    const step4Complete = profile.shift_types && profile.shift_types.length > 0;
+
+    if (!step4Complete) return 4;
+
+    // All steps complete
+    return 1; // Show first step if everything is done
+  };
+
   // Load profile data from backend and localStorage
   useEffect(() => {
     const loadProfileData = async () => {
@@ -45,7 +72,11 @@ const WorkerOnboarding = () => {
         // Try to load from backend first
         const profile = await workerApi.getProfile();
         setProfileData(profile);
-        setCurrentStep(profile.current_step || 1);
+
+        // Auto-navigate to first incomplete step
+        const startStep = determineStartingStep(profile);
+        setCurrentStep(startStep);
+
         setCompletionPercentage(profile.profile_completion_percentage || 0);
       } catch (err) {
         console.error('Failed to load profile from backend:', err);
