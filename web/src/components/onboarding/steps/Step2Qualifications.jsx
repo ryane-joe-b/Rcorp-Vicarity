@@ -270,36 +270,8 @@ const Step2Qualifications = ({ initialData = {}, onComplete, onBack, updateCompl
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      const firstError = Object.keys(errors)[0];
-      document.getElementById(firstError)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-
-    try {
-      setSaving(true);
-      await workerApi.updateProfile({ ...formData, current_step: 2 });
-      localStorage.removeItem('worker_profile_step2');
-      onComplete(formData);
-    } catch (err) {
-      console.error('Failed to save profile:', err);
-      const shouldContinue = window.confirm(
-        'Failed to save to server. Your data is saved locally. Continue anyway?'
-      );
-      if (shouldContinue) {
-        onComplete(formData);
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <div className="space-y-8">
       {/* Main Card */}
       <div className="bg-white rounded-2xl shadow-healthcare border border-gray-100 p-6 md:p-8">
         {/* DBS Check Section */}
@@ -559,7 +531,7 @@ const Step2Qualifications = ({ initialData = {}, onComplete, onBack, updateCompl
           <span>Saving...</span>
         </div>
       )}
-    </form>
+    </div>
   );
 };
 

@@ -273,44 +273,8 @@ const Step1Personal = ({ initialData = {}, onComplete, onBack, updateCompletion,
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      // Scroll to first error
-      const firstError = Object.keys(errors)[0];
-      document.getElementById(firstError)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-
-    try {
-      // Save to backend before moving to next step
-      setSaving(true);
-      await workerApi.updateProfile(formData);
-
-      // Clear localStorage after successful save
-      localStorage.removeItem('worker_profile_step1');
-      localStorage.removeItem('pending_worker_profile');
-
-      // Pass data to parent
-      onComplete(formData);
-    } catch (err) {
-      console.error('Failed to save profile:', err);
-      // Show error to user but still allow progression if data is in localStorage
-      const shouldContinue = window.confirm(
-        'Failed to save to server. Your data is saved locally. Continue anyway?'
-      );
-      if (shouldContinue) {
-        onComplete(formData);
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <div className="space-y-8">
       {/* Main Card */}
       <div className="bg-white rounded-2xl shadow-healthcare border border-gray-100 p-6 md:p-8">
         {/* Profile Photo Section */}
@@ -681,7 +645,7 @@ const Step1Personal = ({ initialData = {}, onComplete, onBack, updateCompletion,
           <span>Saving...</span>
         </div>
       )}
-    </form>
+    </div>
   );
 };
 
