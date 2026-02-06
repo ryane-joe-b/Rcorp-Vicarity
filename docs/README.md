@@ -190,15 +190,15 @@ Workers must complete their profile (4 steps) before accessing jobs:
 | **Landing Page** | ✅ Complete | 100% | All sections live with real-time stats |
 | SSL | ✅ Complete | 100% | Let's Encrypt configured, auto-renewal working |
 | **Authentication** | ✅ Complete | 100% | Register, Login, Email Verification, Smart Routing |
-| **Worker Onboarding** | 🚧 In Progress | 25% | Step 1 complete, Steps 2-4 pending |
+| **Worker Onboarding** | ✅ Complete | 100% | All 4 steps with auto-save & navigation |
 | Worker Dashboard | ⏸️ Not Started | 0% | Job board, applications |
 | Care Home Dashboard | ⏸️ Not Started | 0% | Post shifts, browse workers |
 
 **Worker Onboarding Breakdown:**
 - Step 1 (20%): ✅ Personal details with postcode lookup + API integration
-- Step 2 (30%): ⏸️ Qualifications & DBS
-- Step 3 (25%): ⏸️ Skills & Experience
-- Step 4 (25%): ⏸️ Availability & Preferences
+- Step 2 (30%): ✅ Qualifications & DBS + right to work
+- Step 3 (25%): ✅ Skills & Experience with specializations + bio
+- Step 4 (25%): ✅ Availability & Preferences with shift types + rates
 
 See [PROJECT_STATUS.md](../vibe/PROJECT_STATUS.md) for detailed progress.  
 See [LANDING_PAGE_TODO.md](../vibe/LANDING_PAGE_TODO.md) for Phase 2 tasks.
@@ -251,7 +251,7 @@ We welcome contributions! Please:
 
 ---
 
-**Last Updated**: February 5, 2026
-**Version**: 1.2.0 (Authentication Complete + Worker Onboarding Step 1 Live)
+**Last Updated**: February 6, 2026
+**Version**: 1.3.0 (Authentication Complete + Worker Onboarding Complete - All 4 Steps Live)
 
 Built with care for the care industry 💚🧡
