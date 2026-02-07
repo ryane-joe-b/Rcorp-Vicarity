@@ -39,30 +39,41 @@ const WorkerOnboarding = () => {
   const [completionPercentage, setCompletionPercentage] = useState(0);
 
   // Determine which step to show based on profile completion
+  // MUST MATCH backend calculation in worker_profile.py
   const determineStartingStep = (profile) => {
-    // Check Step 1 fields (20%)
+    // Check Step 1 fields (20%) - All required
     const step1Complete = profile.first_name && profile.last_name &&
                          profile.phone && profile.date_of_birth;
 
     if (!step1Complete) return 1;
 
-    // Check Step 2 fields (30%)
-    const step2Complete = profile.dbs_status && profile.dbs_status !== 'not_checked';
+    // Check Step 2 fields (30%) - DBS status + Right to work
+    const step2Complete =
+      profile.dbs_status &&
+      profile.dbs_status !== 'not_checked' &&
+      profile.right_to_work_status;
 
     if (!step2Complete) return 2;
 
-    // Check Step 3 fields (25%)
-    const step3Complete = profile.years_experience && profile.bio;
+    // Check Step 3 fields (25%) - Years experience + Bio (50+ chars)
+    const step3Complete =
+      profile.years_experience &&
+      profile.bio &&
+      profile.bio.length >= 50;
 
     if (!step3Complete) return 3;
 
-    // Check Step 4 fields (25%)
-    const step4Complete = profile.shift_types && profile.shift_types.length > 0;
+    // Check Step 4 fields (25%) - Shift types + Available days
+    const step4Complete =
+      profile.shift_types &&
+      profile.shift_types.length > 0 &&
+      profile.available_days &&
+      profile.available_days.length > 0;
 
     if (!step4Complete) return 4;
 
-    // All steps complete
-    return 1; // Show first step if everything is done
+    // All steps complete - redirect to dashboard
+    return null; // Signal that onboarding is complete
   };
 
   // Load profile data from backend and localStorage
@@ -74,12 +85,19 @@ const WorkerOnboarding = () => {
 
         if (profile) {
           setProfileData(profile);
-
-          // Auto-navigate to first incomplete step
-          const startStep = determineStartingStep(profile);
-          setCurrentStep(startStep);
-
           setCompletionPercentage(profile.profile_completion_percentage || 0);
+
+          // Auto-navigate to first incomplete step (or dashboard if complete)
+          const startStep = determineStartingStep(profile);
+
+          if (startStep === null) {
+            // Profile is 100% complete - redirect to dashboard
+            console.log('Profile complete! Redirecting to dashboard...');
+            navigate('/dashboard/worker');
+          } else {
+            // Show the incomplete step
+            setCurrentStep(startStep);
+          }
         }
       } catch (err) {
         console.error('Failed to load profile from backend:', err);
@@ -106,7 +124,7 @@ const WorkerOnboarding = () => {
     };
 
     loadProfileData();
-  }, []);
+  }, [navigate]);
 
   // Refresh completion percentage when step changes
   useEffect(() => {
