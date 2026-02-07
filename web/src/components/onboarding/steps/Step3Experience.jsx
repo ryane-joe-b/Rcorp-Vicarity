@@ -213,12 +213,15 @@ const Step3Experience = ({ initialData = {}, onComplete, onBack, updateCompletio
   const debouncedSave = useCallback(
     debounce(async () => {
       setSaving(true);
+      const dataToSave = { ...formData, current_step: 3 };
+      console.log('Step 3: Saving data to backend:', dataToSave);
       try {
-        await workerApi.updateProfile({ ...formData, current_step: 3 });
+        const response = await workerApi.updateProfile(dataToSave);
         saveToLocalStorage();
-        console.log('Step 3 auto-saved to backend');
+        console.log('Step 3 auto-saved successfully:', response);
       } catch (err) {
         console.error('Auto-save failed:', err);
+        console.error('Error details:', err.response?.data);
         saveToLocalStorage();
       } finally {
         setSaving(false);

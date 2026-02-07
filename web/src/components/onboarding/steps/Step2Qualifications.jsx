@@ -233,12 +233,20 @@ const Step2Qualifications = ({ initialData = {}, onComplete, onBack, updateCompl
   const debouncedSave = useCallback(
     debounce(async () => {
       setSaving(true);
+
+      // Filter out empty strings for date fields to avoid validation errors
+      const dataToSave = { ...formData, current_step: 2 };
+      if (dataToSave.dbs_issue_date === '') delete dataToSave.dbs_issue_date;
+      if (dataToSave.dbs_expiry_date === '') delete dataToSave.dbs_expiry_date;
+
+      console.log('Step 2: Saving data to backend:', dataToSave);
       try {
-        await workerApi.updateProfile({ ...formData, current_step: 2 });
+        const response = await workerApi.updateProfile(dataToSave);
         saveToLocalStorage();
-        console.log('Step 2 auto-saved to backend');
+        console.log('Step 2 auto-saved successfully:', response);
       } catch (err) {
         console.error('Auto-save failed:', err);
+        console.error('Error details:', err.response?.data);
         saveToLocalStorage();
       } finally {
         setSaving(false);
