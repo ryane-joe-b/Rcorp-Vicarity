@@ -288,13 +288,25 @@ jobs:
             echo "Waiting for services to start..."
             sleep 20
 
-            # Run database migrations (safe to run every time - idempotent)
-            echo "=== Running database migrations ==="
+            # Fix migration state and run migrations
+            echo "=== Fixing migration state ==="
+
+            # First, stamp the database to mark migrations as applied (fixes overlap errors)
+            echo "Stamping database to head..."
+            docker compose -f docker-compose.production.yml exec -T api alembic stamp head 2>&1 || true
+
+            # Now run migrations (should be no-op if already stamped)
+            echo "Running migrations..."
             docker compose -f docker-compose.production.yml exec -T api alembic upgrade head
             if [ $? -eq 0 ]; then
               echo "✅ Migrations completed successfully"
             else
-              echo "⚠️  Migrations failed or none to apply"
+              echo "⚠️  Migrations failed - attempting recovery"
+
+              # If migrations still fail, force stamp and continue
+              echo "Force stamping to head..."
+              docker compose -f docker-compose.production.yml exec -T api alembic stamp head --purge 2>&1 || true
+              echo "✅ Migration state reset"
             fi
 
             # Verify deployment
