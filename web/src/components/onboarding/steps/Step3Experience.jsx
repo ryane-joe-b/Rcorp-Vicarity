@@ -20,7 +20,7 @@ import { workerApi } from '../../../services/api';
  * - Multi-select checkboxes
  */
 
-const Step3Experience = ({ initialData = {}, onComplete, onBack, updateCompletion }) => {
+const Step3Experience = ({ initialData = {}, onComplete, onBack, updateCompletion, onPercentageChange }) => {
   const [formData, setFormData] = useState({
     years_experience: initialData.years_experience || '',
     specializations: initialData.specializations || [],
@@ -199,8 +199,9 @@ const Step3Experience = ({ initialData = {}, onComplete, onBack, updateCompletio
   // Update completion percentage
   useEffect(() => {
     const completion = calculateStepCompletion();
-    updateCompletion(completion);
-  }, [formData, calculateStepCompletion, updateCompletion]);
+    updateCompletion?.(completion);
+    onPercentageChange?.(completion);
+  }, [formData, calculateStepCompletion, updateCompletion, onPercentageChange]);
 
   // Auto-save to localStorage
   const saveToLocalStorage = () => {

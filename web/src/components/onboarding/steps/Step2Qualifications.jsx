@@ -18,7 +18,7 @@ import { workerApi } from '../../../services/api';
  * - Document upload placeholders
  */
 
-const Step2Qualifications = ({ initialData = {}, onComplete, onBack, updateCompletion }) => {
+const Step2Qualifications = ({ initialData = {}, onComplete, onBack, updateCompletion, onPercentageChange }) => {
   const [formData, setFormData] = useState({
     dbs_status: initialData.dbs_status || 'not_checked',
     dbs_certificate_number: initialData.dbs_certificate_number || '',
@@ -219,8 +219,9 @@ const Step2Qualifications = ({ initialData = {}, onComplete, onBack, updateCompl
   // Update completion percentage
   useEffect(() => {
     const completion = calculateStepCompletion();
-    updateCompletion(completion);
-  }, [formData, calculateStepCompletion, updateCompletion]);
+    updateCompletion?.(completion);
+    onPercentageChange?.(completion);
+  }, [formData, calculateStepCompletion, updateCompletion, onPercentageChange]);
 
   // Auto-save to localStorage
   const saveToLocalStorage = () => {
