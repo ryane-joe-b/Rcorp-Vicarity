@@ -4,11 +4,12 @@ Authentication router - registration, login, verification, password reset.
 
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
+from app.core.config import settings
 from app.core.security import (
     hash_password,
     verify_password,
@@ -45,6 +46,46 @@ from app.schemas.user import CurrentUserResponse
 
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
+
+
+def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
+    """
+    Set HTTP-only authentication cookies.
+
+    Security features:
+    - HTTP-only: Cannot be accessed by JavaScript (XSS protection)
+    - Secure: Only sent over HTTPS in production
+    - SameSite=Lax: CSRF protection while allowing normal navigation
+    """
+    is_production = settings.ENVIRONMENT == "production"
+
+    # Access token (30 minutes)
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convert to seconds
+        path="/",
+    )
+
+    # Refresh token (7 days)
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,  # Convert to seconds
+        path="/",
+    )
+
+
+def clear_auth_cookies(response: Response):
+    """Clear authentication cookies on logout."""
+    response.delete_cookie(key="access_token", path="/")
+    response.delete_cookie(key="refresh_token", path="/")
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
@@ -128,54 +169,60 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=LoginResponse)
-def login(request: LoginRequest, db: Session = Depends(get_db)):
+def login(request: LoginRequest, response: Response, db: Session = Depends(get_db)):
     """
-    Login user and return JWT tokens.
-    
-    Returns access token, refresh token, and user info for smart routing.
+    Login user and set HTTP-only authentication cookies.
+
+    Returns user info for smart routing (tokens are in cookies).
     """
     # Find user by email
     user = db.query(User).filter(User.email == request.email).first()
-    
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
         )
-    
+
     # Verify password
     if not verify_password(request.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
         )
-    
+
     # Check if account is active
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account is inactive. Please contact support.",
         )
-    
+
     # Update last login
     user.last_login_at = datetime.utcnow()
     db.commit()
-    
+
     # Create tokens
     access_token = create_access_token(user.id, user.role.value)
     refresh_token = create_refresh_token(user.id)
-    
+
+    # Set HTTP-only cookies
+    set_auth_cookies(response, access_token, refresh_token)
+
     # Determine profile completion for workers
     profile_complete = None
+    profile_completion_percentage = 0
     if user.role == UserRole.WORKER:
         if user.worker_profile:
             profile_complete = user.worker_profile.is_complete
+            profile_completion_percentage = user.worker_profile.profile_completion_percentage
         else:
             profile_complete = False
-    
+
+    # Return user info only (tokens are in cookies)
     return LoginResponse(
-        access_token=access_token,
-        refresh_token=refresh_token,
+        access_token="",  # Empty string for backwards compatibility
+        refresh_token="",  # Empty string for backwards compatibility
         user_id=user.id,
         user_type=user.role.value,
         email_verified=user.email_verified,
@@ -245,34 +292,62 @@ def verify_email(request: VerifyEmailRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/refresh", response_model=RefreshTokenResponse)
-def refresh_access_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
+def refresh_access_token(
+    request_obj: Request,
+    response: Response,
+    db: Session = Depends(get_db)
+):
     """
-    Get a new access token using refresh token.
+    Refresh access token using refresh token from cookies.
+
+    Reads refresh_token from HTTP-only cookie and issues new tokens.
     """
+    # Get refresh token from cookie
+    refresh_token = request_obj.cookies.get("refresh_token")
+
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No refresh token found",
+        )
+
     # Verify refresh token
-    payload = verify_token(request.refresh_token, TokenType.REFRESH)
-    
+    payload = verify_token(refresh_token, TokenType.REFRESH)
+
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",
         )
-    
+
     user_id = payload.get("sub")
-    
+
     # Find user
     user = db.query(User).filter(User.id == user_id).first()
-    
+
     if not user or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found or inactive",
         )
-    
-    # Create new access token
-    access_token = create_access_token(user.id, user.role.value)
-    
-    return RefreshTokenResponse(access_token=access_token)
+
+    # Create new tokens (rotate refresh token for security)
+    new_access_token = create_access_token(user.id, user.role.value)
+    new_refresh_token = create_refresh_token(user.id)
+
+    # Set new cookies
+    set_auth_cookies(response, new_access_token, new_refresh_token)
+
+    return RefreshTokenResponse(access_token="")
+
+
+@router.post("/logout")
+def logout(response: Response):
+    """
+    Logout user by clearing authentication cookies.
+    """
+    clear_auth_cookies(response)
+    return {"message": "Logged out successfully"}
 
 
 @router.get("/me", response_model=CurrentUserResponse)
