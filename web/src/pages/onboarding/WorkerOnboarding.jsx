@@ -41,9 +41,17 @@ const WorkerOnboarding = () => {
   // Determine which step to show based on profile completion
   // MUST MATCH backend calculation in worker_profile.py
   const determineStartingStep = (profile) => {
+    console.log('🔍 Checking profile completion:', profile);
+
     // Check Step 1 fields (20%) - All required
     const step1Complete = profile.first_name && profile.last_name &&
                          profile.phone && profile.date_of_birth;
+    console.log('Step 1 complete?', step1Complete, {
+      first_name: !!profile.first_name,
+      last_name: !!profile.last_name,
+      phone: !!profile.phone,
+      date_of_birth: !!profile.date_of_birth
+    });
 
     if (!step1Complete) return 1;
 
@@ -52,6 +60,10 @@ const WorkerOnboarding = () => {
       profile.dbs_status &&
       profile.dbs_status !== 'not_checked' &&
       profile.right_to_work_status;
+    console.log('Step 2 complete?', step2Complete, {
+      dbs_status: profile.dbs_status,
+      right_to_work_status: profile.right_to_work_status
+    });
 
     if (!step2Complete) return 2;
 
@@ -60,6 +72,11 @@ const WorkerOnboarding = () => {
       profile.years_experience &&
       profile.bio &&
       profile.bio.length >= 50;
+    console.log('Step 3 complete?', step3Complete, {
+      years_experience: profile.years_experience,
+      bio_length: profile.bio?.length || 0,
+      bio_sample: profile.bio?.substring(0, 50)
+    });
 
     if (!step3Complete) return 3;
 
@@ -69,10 +86,15 @@ const WorkerOnboarding = () => {
       profile.shift_types.length > 0 &&
       profile.available_days &&
       profile.available_days.length > 0;
+    console.log('Step 4 complete?', step4Complete, {
+      shift_types: profile.shift_types,
+      available_days: profile.available_days
+    });
 
     if (!step4Complete) return 4;
 
     // All steps complete - redirect to dashboard
+    console.log('✅ ALL STEPS COMPLETE! Redirecting to dashboard...');
     return null; // Signal that onboarding is complete
   };
 
