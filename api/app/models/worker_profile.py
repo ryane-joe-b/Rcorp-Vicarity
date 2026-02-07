@@ -114,30 +114,42 @@ class WorkerProfile(Base):
     def calculate_completion_percentage(self) -> int:
         """Calculate profile completion percentage based on filled fields."""
         total = 0
-        
-        # Step 1: Personal Details (20%)
+
+        # Step 1: Personal Details (20%) - All required
         step1_fields = [self.first_name, self.last_name, self.phone, self.date_of_birth]
         step1_filled = sum(1 for f in step1_fields if f)
         total += int((step1_filled / len(step1_fields)) * 20)
-        
+
         # Step 2: Qualifications (30%)
         step2_score = 0
-        if self.dbs_status != DBSStatus.NOT_CHECKED:
+        # DBS status is required (15%)
+        if self.dbs_status and self.dbs_status != DBSStatus.NOT_CHECKED:
             step2_score += 15
-        if self.qualifications and len(self.qualifications) > 0:
+        # Right to work is required (15%)
+        if self.right_to_work_status:
             step2_score += 15
         total += step2_score
-        
+
         # Step 3: Skills & Experience (25%)
-        step3_fields = [self.years_experience, self.specializations, self.bio]
-        step3_filled = sum(1 for f in step3_fields if f)
-        total += int((step3_filled / len(step3_fields)) * 25)
-        
+        step3_score = 0
+        # Years experience is required (10%)
+        if self.years_experience:
+            step3_score += 10
+        # Bio is required (15%)
+        if self.bio and len(self.bio) >= 50:
+            step3_score += 15
+        total += step3_score
+
         # Step 4: Availability (25%)
-        step4_fields = [self.available_days, self.shift_types, self.travel_radius_miles]
-        step4_filled = sum(1 for f in step4_fields if f)
-        total += int((step4_filled / len(step4_fields)) * 25)
-        
+        step4_score = 0
+        # Shift types required (15%)
+        if self.shift_types and len(self.shift_types) > 0:
+            step4_score += 15
+        # Available days required (10%)
+        if self.available_days and len(self.available_days) > 0:
+            step4_score += 10
+        total += step4_score
+
         return min(total, 100)
     
     def update_completion_status(self):

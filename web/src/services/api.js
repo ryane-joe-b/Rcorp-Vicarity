@@ -16,7 +16,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 // Create axios instance with cookie support
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 30000, // 30 seconds (increased from 10s for slow endpoints)
   headers: {
     'Content-Type': 'application/json',
   },
