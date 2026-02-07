@@ -202,14 +202,20 @@ const Step1Personal = ({ initialData = {}, onComplete, onBack, updateCompletion,
   const debouncedSave = useCallback(
     debounce(async () => {
       setSaving(true);
+
+      // Filter out empty strings for date fields to avoid validation errors
+      const dataToSave = { ...formData };
+      if (dataToSave.date_of_birth === '') delete dataToSave.date_of_birth;
+
       try {
         // Save to backend
-        await workerApi.updateProfile(formData);
+        await workerApi.updateProfile(dataToSave);
         // Also save to localStorage as backup
         saveToLocalStorage();
         console.log('Auto-saved to backend and localStorage');
       } catch (err) {
         console.error('Auto-save failed:', err);
+        console.error('Error details:', err.response?.data);
         // Still save to localStorage even if API fails
         saveToLocalStorage();
 

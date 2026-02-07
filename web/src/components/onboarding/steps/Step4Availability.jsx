@@ -148,13 +148,24 @@ const Step4Availability = ({ onComplete, onPercentageChange }) => {
   const debouncedSave = useCallback(
     debounce(async (data) => {
       setSaving(true);
+
+      // Filter out empty strings for number and date fields to avoid validation errors
+      const dataToSave = { ...data };
+      if (dataToSave.hours_per_week === '') delete dataToSave.hours_per_week;
+      if (dataToSave.travel_radius_miles === '') delete dataToSave.travel_radius_miles;
+      if (dataToSave.hourly_rate_min_pence === '') delete dataToSave.hourly_rate_min_pence;
+      if (dataToSave.hourly_rate_max_pence === '') delete dataToSave.hourly_rate_max_pence;
+      if (dataToSave.available_start_date === '') delete dataToSave.available_start_date;
+
+      console.log('Step 4: Saving data to backend:', dataToSave);
       try {
-        await workerApi.updateProfile(data);
+        const response = await workerApi.updateProfile(dataToSave);
         saveToLocalStorage();
         setLastSaved(new Date());
-        console.log('✅ Auto-saved Step 4 to backend');
+        console.log('✅ Step 4 auto-saved successfully:', response);
       } catch (err) {
         console.error('Auto-save failed:', err);
+        console.error('Error details:', err.response?.data);
         saveToLocalStorage(); // Fallback to localStorage
         if (err.response?.status === 401) {
           console.warn('Session expired, data saved locally only');
