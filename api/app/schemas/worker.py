@@ -84,26 +84,26 @@ class WorkerProfileResponse(BaseModel):
     emergency_contact_relationship: Optional[str]
 
     # Qualifications
-    dbs_status: str
-    dbs_expiry_date: Optional[date]
-    right_to_work_status: Optional[str]
-    qualifications: List[Dict[str, Any]]
+    dbs_status: Optional[str] = None
+    dbs_expiry_date: Optional[date] = None
+    right_to_work_status: Optional[str] = None
+    qualifications: Optional[List[Dict[str, Any]]] = None
 
     # Skills
-    years_experience: Optional[str]
-    specializations: List[str]
-    languages: List[str]
-    soft_skills: List[str]
-    bio: Optional[str]
+    years_experience: Optional[str] = None
+    specializations: Optional[List[str]] = None
+    languages: Optional[List[str]] = None
+    soft_skills: Optional[List[str]] = None
+    bio: Optional[str] = None
 
     # Availability
-    available_days: List[str]
-    shift_types: List[str]
-    hours_per_week: Optional[int]
-    travel_radius_miles: Optional[int]
-    hourly_rate_min_pence: Optional[int]
-    hourly_rate_max_pence: Optional[int]
-    has_own_transport: Optional[bool]
-    available_start_date: Optional[date]
+    available_days: Optional[List[str]] = None
+    shift_types: Optional[List[str]] = None
+    hours_per_week: Optional[int] = None
+    travel_radius_miles: Optional[int] = None
+    hourly_rate_min_pence: Optional[int] = None
+    hourly_rate_max_pence: Optional[int] = None
+    has_own_transport: Optional[bool] = None
+    available_start_date: Optional[date] = None
     
     model_config = {"from_attributes": True}
