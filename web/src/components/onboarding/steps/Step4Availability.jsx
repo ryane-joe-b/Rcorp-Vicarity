@@ -27,7 +27,7 @@ import { workerApi } from '../../../services/api';
  * - Real-time validation
  */
 
-const Step4Availability = ({ onComplete, onPercentageChange }) => {
+const Step4Availability = ({ onComplete, onPercentageChange, flushSaveRef }) => {
   const [formData, setFormData] = useState({
     // Shift preferences
     shift_types: [], // day, night, twilight, weekend
@@ -144,38 +144,55 @@ const Step4Availability = ({ onComplete, onPercentageChange }) => {
     localStorage.setItem('onboarding_step4', JSON.stringify(formData));
   }, [formData]);
 
+  // Immediate save function (no debounce)
+  const saveImmediately = useCallback(async (data) => {
+    setSaving(true);
+
+    // Filter out empty strings for number and date fields to avoid validation errors
+    const dataToSave = { ...data };
+    if (dataToSave.hours_per_week === '') delete dataToSave.hours_per_week;
+    if (dataToSave.travel_radius_miles === '') delete dataToSave.travel_radius_miles;
+    if (dataToSave.hourly_rate_min_pence === '') delete dataToSave.hourly_rate_min_pence;
+    if (dataToSave.hourly_rate_max_pence === '') delete dataToSave.hourly_rate_max_pence;
+    if (dataToSave.available_start_date === '') delete dataToSave.available_start_date;
+
+    console.log('Step 4: Saving data to backend (immediate):', dataToSave);
+    try {
+      const response = await workerApi.updateProfile(dataToSave);
+      saveToLocalStorage();
+      setLastSaved(new Date());
+      console.log('✅ Step 4 saved successfully:', response);
+    } catch (err) {
+      console.error('Save failed:', err);
+      console.error('Error details:', err.response?.data);
+      saveToLocalStorage(); // Fallback to localStorage
+      if (err.response?.status === 401) {
+        console.warn('Session expired, data saved locally only');
+      }
+    } finally {
+      setSaving(false);
+    }
+  }, [saveToLocalStorage]);
+
   // Auto-save to backend (debounced)
   const debouncedSave = useCallback(
     debounce(async (data) => {
-      setSaving(true);
-
-      // Filter out empty strings for number and date fields to avoid validation errors
-      const dataToSave = { ...data };
-      if (dataToSave.hours_per_week === '') delete dataToSave.hours_per_week;
-      if (dataToSave.travel_radius_miles === '') delete dataToSave.travel_radius_miles;
-      if (dataToSave.hourly_rate_min_pence === '') delete dataToSave.hourly_rate_min_pence;
-      if (dataToSave.hourly_rate_max_pence === '') delete dataToSave.hourly_rate_max_pence;
-      if (dataToSave.available_start_date === '') delete dataToSave.available_start_date;
-
-      console.log('Step 4: Saving data to backend:', dataToSave);
-      try {
-        const response = await workerApi.updateProfile(dataToSave);
-        saveToLocalStorage();
-        setLastSaved(new Date());
-        console.log('✅ Step 4 auto-saved successfully:', response);
-      } catch (err) {
-        console.error('Auto-save failed:', err);
-        console.error('Error details:', err.response?.data);
-        saveToLocalStorage(); // Fallback to localStorage
-        if (err.response?.status === 401) {
-          console.warn('Session expired, data saved locally only');
-        }
-      } finally {
-        setSaving(false);
-      }
+      await saveImmediately(data);
     }, 1000),
-    []
+    [saveImmediately]
   );
+
+  // Expose flush function to parent via ref
+  useEffect(() => {
+    if (flushSaveRef) {
+      flushSaveRef.current = async () => {
+        // Cancel any pending debounced save
+        debouncedSave.cancel();
+        // Save immediately
+        await saveImmediately(formData);
+      };
+    }
+  }, [flushSaveRef, debouncedSave, saveImmediately, formData]);
 
   // Update form data and trigger auto-save
   useEffect(() => {

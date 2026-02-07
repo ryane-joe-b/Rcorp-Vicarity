@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { workerApi } from '../../services/api';
 import Container from '../../components/shared/Container';
@@ -37,6 +37,9 @@ const WorkerOnboarding = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [profileData, setProfileData] = useState({});
   const [completionPercentage, setCompletionPercentage] = useState(0);
+
+  // Ref to flush pending saves before navigation
+  const step4FlushSaveRef = useRef(null);
 
   // Determine which step to show based on profile completion
   // MUST MATCH backend calculation in worker_profile.py
@@ -184,11 +187,22 @@ const WorkerOnboarding = () => {
   };
 
   // Navigate between steps
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < 4) {
       setCurrentStep(prev => prev + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
+      // Step 4 - flush any pending saves before redirecting
+      if (step4FlushSaveRef.current) {
+        console.log('🔄 Flushing pending saves before navigation...');
+        try {
+          await step4FlushSaveRef.current();
+          console.log('✅ All changes saved');
+        } catch (err) {
+          console.error('Failed to save changes:', err);
+        }
+      }
+
       // All steps complete - redirect to dashboard
       navigate('/dashboard/worker');
     }
@@ -228,6 +242,7 @@ const WorkerOnboarding = () => {
         return (
           <Step4Availability
             onPercentageChange={handlePercentageChange}
+            flushSaveRef={step4FlushSaveRef}
           />
         );
       default:
