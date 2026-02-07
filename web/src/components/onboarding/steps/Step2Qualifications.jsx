@@ -223,6 +223,11 @@ const Step2Qualifications = ({ initialData = {}, onComplete, onBack, updateCompl
     onPercentageChange?.(completion);
   }, [formData, calculateStepCompletion, updateCompletion, onPercentageChange]);
 
+  // Auto-save when formData changes
+  useEffect(() => {
+    debouncedSave();
+  }, [formData, debouncedSave]);
+
   // Auto-save to localStorage
   const saveToLocalStorage = () => {
     localStorage.setItem('worker_profile_step2', JSON.stringify(formData));

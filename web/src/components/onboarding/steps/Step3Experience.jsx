@@ -203,6 +203,11 @@ const Step3Experience = ({ initialData = {}, onComplete, onBack, updateCompletio
     onPercentageChange?.(completion);
   }, [formData, calculateStepCompletion, updateCompletion, onPercentageChange]);
 
+  // Auto-save when formData changes
+  useEffect(() => {
+    debouncedSave();
+  }, [formData, debouncedSave]);
+
   // Auto-save to localStorage
   const saveToLocalStorage = () => {
     localStorage.setItem('worker_profile_step3', JSON.stringify(formData));
