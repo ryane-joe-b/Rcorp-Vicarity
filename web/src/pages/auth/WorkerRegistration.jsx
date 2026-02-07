@@ -26,17 +26,13 @@ const WorkerRegistration = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    first_name: '',
-    last_name: '',
-    phone: '',
-    date_of_birth: '',
   });
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
   // Calculate progress
-  const progress = (step / 3) * 100;
+  const progress = (step / 2) * 100;
 
   // Handle input change
   const handleChange = (e) => {
@@ -75,25 +71,6 @@ const WorkerRegistration = () => {
         if (!value) error = 'Please confirm password';
         else if (value !== formData.password) error = 'Passwords do not match';
         break;
-      case 'first_name':
-      case 'last_name':
-        if (!value) error = `${name === 'first_name' ? 'First' : 'Last'} name is required`;
-        else if (value.length < 2) error = 'Name must be at least 2 characters';
-        break;
-      case 'phone':
-        if (!value) error = 'Phone number is required';
-        else if (!/^(\+44|0)[0-9]{10}$/.test(value.replace(/\s/g, ''))) {
-          error = 'Please enter a valid UK phone number';
-        }
-        break;
-      case 'date_of_birth':
-        if (!value) error = 'Date of birth is required';
-        else {
-          const age = new Date().getFullYear() - new Date(value).getFullYear();
-          if (age < 18) error = 'You must be at least 18 years old';
-          if (age > 100) error = 'Please enter a valid date';
-        }
-        break;
       default:
         break;
     }
@@ -116,18 +93,13 @@ const WorkerRegistration = () => {
     let stepErrors = {};
 
     if (step === 1) {
-      ['email', 'password', 'confirmPassword', 'first_name', 'last_name'].forEach(field => {
-        if (!validateField(field, formData[field])) {
-          stepErrors[field] = errors[field] || 'Required';
-        }
-      });
-    } else if (step === 2) {
-      ['phone', 'date_of_birth'].forEach(field => {
+      ['email', 'password', 'confirmPassword'].forEach(field => {
         if (!validateField(field, formData[field])) {
           stepErrors[field] = errors[field] || 'Required';
         }
       });
     }
+    // Step 2 is just review/terms, no validation needed
 
     setErrors(stepErrors);
     return Object.keys(stepErrors).length === 0;
@@ -136,7 +108,7 @@ const WorkerRegistration = () => {
   // Next step
   const nextStep = () => {
     if (validateStep()) {
-      setStep(prev => Math.min(prev + 1, 3));
+      setStep(prev => Math.min(prev + 1, 2));
     }
   };
 
@@ -162,13 +134,7 @@ const WorkerRegistration = () => {
     const result = await register(submitData);
 
     if (result.success) {
-      // Store profile data in localStorage to use in profile completion
-      localStorage.setItem('pending_worker_profile', JSON.stringify({
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        phone: formData.phone,
-        date_of_birth: formData.date_of_birth,
-      }));
+      // User will complete their profile after email verification
       navigate('/verify-email');
     }
   };
@@ -379,80 +345,17 @@ const WorkerRegistration = () => {
                 </div>
               )}
 
-              {/* Step 2: Contact Details */}
+              {/* Step 2: Review & Terms */}
               {step === 2 && (
                 <div className="space-y-6 animate-fadeIn">
-                  {/* Phone */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all ${
-                        errors.phone && touched.phone ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="07123 456789"
-                    />
-                    {errors.phone && touched.phone && (
-                      <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-                    )}
-                  </div>
-
-                  {/* Date of Birth */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Date of Birth *
-                    </label>
-                    <input
-                      type="date"
-                      name="date_of_birth"
-                      value={formData.date_of_birth}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all ${
-                        errors.date_of_birth && touched.date_of_birth ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    />
-                    {errors.date_of_birth && touched.date_of_birth && (
-                      <p className="mt-1 text-sm text-red-600">{errors.date_of_birth}</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Review */}
-              {step === 3 && (
-                <div className="space-y-6 animate-fadeIn">
-                  <div className="bg-sage-50 rounded-lg p-6 space-y-4">
+                  <div className="bg-sage-50 rounded-lg p-6">
                     <h3 className="font-semibold text-charcoal-900 mb-4">Review Your Information</h3>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Name</p>
-                        <p className="font-medium text-charcoal-900">{formData.first_name} {formData.last_name}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Email</p>
-                        <p className="font-medium text-charcoal-900">{formData.email}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Phone</p>
-                        <p className="font-medium text-charcoal-900">{formData.phone}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Date of Birth</p>
-                        <p className="font-medium text-charcoal-900">{formData.date_of_birth}</p>
-                      </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Email</p>
+                      <p className="font-medium text-charcoal-900">{formData.email}</p>
                     </div>
-
                     <p className="text-sm text-gray-500 italic mt-4">
-                      You'll complete your address details during profile setup
+                      You'll complete your personal details (name, phone, DOB, address) during profile setup after email verification
                     </p>
                   </div>
 

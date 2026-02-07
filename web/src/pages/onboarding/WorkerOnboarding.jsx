@@ -71,26 +71,35 @@ const WorkerOnboarding = () => {
       try {
         // Try to load from backend first
         const profile = await workerApi.getProfile();
-        setProfileData(profile);
 
-        // Auto-navigate to first incomplete step
-        const startStep = determineStartingStep(profile);
-        setCurrentStep(startStep);
+        if (profile) {
+          setProfileData(profile);
 
-        setCompletionPercentage(profile.profile_completion_percentage || 0);
+          // Auto-navigate to first incomplete step
+          const startStep = determineStartingStep(profile);
+          setCurrentStep(startStep);
+
+          setCompletionPercentage(profile.profile_completion_percentage || 0);
+        }
       } catch (err) {
         console.error('Failed to load profile from backend:', err);
 
-        // Fall back to localStorage if backend fails
-        const pendingData = localStorage.getItem('pending_worker_profile');
-        if (pendingData) {
-          try {
-            const data = JSON.parse(pendingData);
-            setProfileData(data);
-            // Clear after loading
-            localStorage.removeItem('pending_worker_profile');
-          } catch (parseErr) {
-            console.error('Failed to parse pending profile data:', parseErr);
+        // Profile doesn't exist yet (new user) - that's okay, start at step 1
+        if (err.response?.status === 404) {
+          console.log('No profile found, starting fresh at step 1');
+          setCurrentStep(1);
+          setCompletionPercentage(0);
+        } else {
+          // For other errors, try localStorage
+          const pendingData = localStorage.getItem('pending_worker_profile');
+          if (pendingData) {
+            try {
+              const data = JSON.parse(pendingData);
+              setProfileData(data);
+              localStorage.removeItem('pending_worker_profile');
+            } catch (parseErr) {
+              console.error('Failed to parse pending profile data:', parseErr);
+            }
           }
         }
       }
