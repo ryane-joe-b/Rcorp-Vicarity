@@ -139,10 +139,12 @@ Vicarity is a **dual-sided marketplace** with:
 
 ### Authentication
 
-- JWT-based authentication
+- **HTTP-only cookie-based authentication** (XSS-immune)
+- JWT tokens stored in secure cookies
+- Automatic token refresh with request queuing
 - Email verification required
-- 30-minute access tokens
-- 7-day refresh tokens
+- 30-minute access tokens, 7-day refresh tokens
+- SameSite=Lax cookies for CSRF protection
 
 ### Profile Completion
 
@@ -251,7 +253,7 @@ We welcome contributions! Please:
 
 ---
 
-**Last Updated**: February 6, 2026
-**Version**: 1.3.1 (Authentication Complete + Worker Onboarding Complete + UX Fixes Applied)
+**Last Updated**: February 7, 2026
+**Version**: 1.4.0 (Cookie-Based Auth + Race Condition Fix + Onboarding Complete)
 
 Built with care for the care industry 💚🧡

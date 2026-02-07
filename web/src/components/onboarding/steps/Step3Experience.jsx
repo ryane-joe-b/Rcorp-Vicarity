@@ -33,6 +33,38 @@ const Step3Experience = ({ initialData = {}, onComplete, onBack, updateCompletio
   const [touched, setTouched] = useState({});
   const [saving, setSaving] = useState(false);
 
+  // Load saved data from backend on mount
+  useEffect(() => {
+    loadSavedData();
+  }, []);
+
+  const loadSavedData = async () => {
+    try {
+      const profile = await workerApi.getProfile();
+      if (profile) {
+        setFormData({
+          years_experience: profile.years_experience || '',
+          specializations: profile.specializations || [],
+          languages: profile.languages || [],
+          soft_skills: profile.soft_skills || [],
+          bio: profile.bio || '',
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load profile data:', err);
+      // Try localStorage as fallback
+      const saved = localStorage.getItem('worker_profile_step3');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          setFormData(data);
+        } catch (parseErr) {
+          console.error('Failed to parse saved data:', parseErr);
+        }
+      }
+    }
+  };
+
   // Experience options
   const experienceOptions = [
     { value: '0-1', label: 'Less than 1 year', description: 'Just starting out' },

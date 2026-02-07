@@ -437,12 +437,12 @@ All containers communicate via a bridge network (`vicarity-network`):
    └─> Returns redirect URL based on role and profile status
 ```
 
-### Authentication Flow
+### Authentication Flow (Cookie-Based)
 
 ```
 1. User submits login credentials
    └─> POST /api/auth/login {email, password}
-       
+
 2. Backend authenticates
    ├─> Finds user by email
    ├─> Verifies password (bcrypt.verify)
@@ -450,22 +450,33 @@ All containers communicate via a bridge network (`vicarity-network`):
    ├─> Updates last_login_at timestamp
    ├─> Generates access token (JWT, 30min expiry)
    ├─> Generates refresh token (JWT, 7 day expiry)
-   └─> Returns tokens + user metadata
-       
-3. Frontend stores tokens
-   ├─> Access token → memory or sessionStorage
-   └─> Refresh token → localStorage or httpOnly cookie
-       
+   └─> Sets HTTP-only cookies (NOT in JSON response)
+       ├─> access_token cookie (httpOnly, secure, SameSite=Lax)
+       └─> refresh_token cookie (httpOnly, secure, SameSite=Lax)
+
+3. Frontend receives response
+   ├─> No token storage needed (handled by browser)
+   ├─> Cookies sent automatically with every request
+   └─> JavaScript CANNOT access tokens (XSS protection)
+
 4. Subsequent API requests
-   ├─> Add header: Authorization: Bearer <access_token>
-   └─> Backend validates JWT on every request
-       
-5. Token expiry handling
+   ├─> Browser automatically sends cookies
+   ├─> Backend reads token from request.cookies.get("access_token")
+   └─> Validates JWT and returns data
+
+5. Token expiry handling (Automatic)
    ├─> API returns 401 Unauthorized
-   ├─> Frontend calls POST /api/auth/refresh {refresh_token}
-   ├─> Backend validates refresh token
-   ├─> Issues new access token
-   └─> Frontend retries original request
+   ├─> Axios interceptor catches 401
+   ├─> Calls POST /api/auth/refresh (refresh_token from cookie)
+   ├─> Backend validates refresh token, sets new cookies
+   ├─> Interceptor retries original request
+   └─> User never sees the refresh (seamless)
+
+6. Logout
+   ├─> POST /api/auth/logout
+   ├─> Backend clears cookies (Set-Cookie with max-age=0)
+   ├─> Cross-tab logout via localStorage events
+   └─> All tabs redirect to login
 ```
 
 ### Profile Update Flow
@@ -532,14 +543,16 @@ Security is implemented at multiple layers:
 **Access Token**:
 - Expiry: 30 minutes
 - Claims: `sub` (user_id), `role`, `type`, `exp`, `iat`
-- Storage: Memory or sessionStorage
+- Storage: **HTTP-only cookie** (JavaScript cannot access)
+- Cookie flags: `httpOnly`, `secure` (prod), `SameSite=Lax`
 - Used for: All authenticated API requests
 
 **Refresh Token**:
 - Expiry: 7 days
 - Claims: `sub` (user_id), `type`, `exp`, `iat`
-- Storage: localStorage or httpOnly cookie (future)
-- Used for: Refreshing access tokens
+- Storage: **HTTP-only cookie** (JavaScript cannot access)
+- Cookie flags: `httpOnly`, `secure` (prod), `SameSite=Lax`
+- Used for: Refreshing access tokens automatically
 
 **Email Verification Token**:
 - Expiry: 24 hours

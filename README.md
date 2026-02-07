@@ -61,11 +61,14 @@ The platform is built with a production-ready FastAPI backend, React frontend, a
 - 🚧 Interview scheduling (coming soon)
 
 ### Security & Authentication
-- JWT-based authentication (access + refresh tokens)
+- **HTTP-only cookie-based authentication** (XSS protection)
+- JWT tokens (access + refresh) stored in secure cookies
+- Automatic token refresh with queue system
 - Bcrypt password hashing
 - Email verification required
 - Password reset flow with secure tokens
-- Rate limiting on authentication endpoints
+- Rate limiting on authentication endpoints (5 req/s)
+- SameSite=Lax cookies (CSRF protection)
 - CORS protection
 - Security headers (HSTS, CSP, X-Frame-Options)
 
@@ -111,14 +114,17 @@ The platform is built with a production-ready FastAPI backend, React frontend, a
 |-----------|--------|------------|-------|
 | Backend API | ✅ Production | 100% | All endpoints implemented |
 | Database Models | ✅ Production | 100% | Schema complete |
-| Authentication | ✅ Production | 100% | JWT + email verification |
+| Authentication | ✅ Production | 100% | HTTP-only cookies + auto-refresh |
 | Email System | ✅ Production | 100% | Resend integration |
-| Frontend Auth | 🚧 In Progress | 20% | Basic setup only |
-| Frontend Pages | 🚧 Not Started | 0% | Needs implementation |
+| Landing Page | ✅ Production | 100% | Full design with real-time stats |
+| Worker Onboarding | ✅ Production | 100% | 4-step wizard with flush-save |
+| Smart Routing | ✅ Production | 100% | Role & completion-based navigation |
+| Worker Dashboard | ⏸️ Not Started | 0% | Job board access |
+| Care Home Dashboard | ⏸️ Not Started | 0% | Shift posting |
 | CI/CD Pipeline | ✅ Production | 100% | Automated deployments |
 | Docker Setup | ✅ Production | 100% | Multi-service orchestration |
-| SSL/HTTPS | ⏸️ Pending | 90% | Certificate needed |
-| Database Migrations | ⏸️ Pending | 95% | Need to run initial migration |
+| SSL/HTTPS | ✅ Production | 100% | Let's Encrypt configured |
+| Database Migrations | ✅ Production | 100% | Auto-run in CI/CD |
 
 **Next Priorities**:
 1. Run database migrations (5 mins)
@@ -372,21 +378,25 @@ Full API documentation: [docs/API.md](./docs/API.md)
 ## Security Features
 
 ### Backend
+- **HTTP-only cookies for token storage** (XSS immunity)
 - JWT tokens with expiry (access: 30min, refresh: 7 days)
-- Password hashing with bcrypt
+- SameSite=Lax cookie policy (CSRF protection)
+- Automatic token refresh with concurrent request queue
+- Password hashing with bcrypt (cost factor 12)
 - Email verification required for activation
-- Rate limiting on authentication endpoints
-- CORS restrictions
+- Rate limiting: 5 req/s on auth endpoints (burst: 10)
+- CORS restrictions with credential support
 - SQL injection protection (SQLAlchemy ORM)
 - Input validation with Pydantic v2
-- Secure password reset flow
+- Secure password reset flow with single-use tokens
 
 ### Infrastructure
 - SSH key-only authentication
 - Firewall (UFW) with minimal open ports
 - Fail2ban for brute force protection
-- HTTPS with TLS 1.2/1.3 only (once SSL is configured)
-- Security headers (HSTS, CSP, X-Frame-Options)
+- HTTPS with TLS 1.2/1.3 only
+- Let's Encrypt SSL with auto-renewal
+- Security headers (HSTS, CSP, X-Frame-Options, X-Content-Type-Options)
 - Docker container isolation
 - Network segregation
 - Resource limits on containers

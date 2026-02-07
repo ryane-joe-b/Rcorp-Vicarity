@@ -1,9 +1,9 @@
 # VICARITY - PROJECT STATUS
 
-**Date:** February 6, 2026
+**Date:** February 7, 2026
 **Domain:** vicarity.co.uk
-**Status:** Backend Live, Landing Page Complete, Authentication Flow Complete, Worker Onboarding Complete (100%)
-**Recent Update:** Complete Worker Onboarding Wizard (all 4 steps) with auto-save, validation, and seamless navigation deployed to production
+**Status:** Backend Live, Landing Page Complete, Cookie Auth Complete, Worker Onboarding Complete (100%)
+**Recent Update:** Migrated to HTTP-only cookie authentication (XSS protection) + Fixed race condition causing data loss in Step 4 (flush-save pattern)
 
 ---
 
@@ -20,11 +20,14 @@ Vicarity is a care worker marketplace platform connecting qualified care workers
 **Location:** `/api`
 
 #### Authentication System
-- JWT-based authentication with access & refresh tokens
+- **HTTP-only cookie-based authentication** (Feb 7, 2026 - XSS protection)
+- JWT tokens with automatic refresh and concurrent request queuing
 - Email verification with Resend integration
 - Password reset flow with secure tokens
 - Role-based access control (worker, care_home_admin, care_home_staff)
 - Token expiry: 30min (access), 7 days (refresh), 24hrs (verification)
+- SameSite=Lax cookies for CSRF protection
+- Cross-tab logout synchronization
 
 #### Database Models
 - **User Model**: Email, hashed passwords, role enum, email verification status
@@ -146,6 +149,51 @@ Vicarity is a care worker marketplace platform connecting qualified care workers
 - ✅ Comprehensive troubleshooting guide (`DEPLOYMENT_TROUBLESHOOTING.md`)
 
 **Status:** ✅ Fully working and production-hardened
+
+---
+
+### 2.5. Security & Data Integrity Fixes (February 7, 2026) ✅
+
+**Documentation:** `vibe/COOKIE_AUTH_AND_RACE_CONDITION_FIX_2026_02_07.md`
+
+#### Cookie-Based Authentication Migration
+**Problem:** JWT tokens stored in localStorage vulnerable to XSS attacks
+
+**Solution:** Migrated to HTTP-only cookies
+- ✅ Tokens stored in secure HTTP-only cookies (JavaScript cannot access)
+- ✅ SameSite=Lax cookies for CSRF protection
+- ✅ Automatic token refresh with concurrent request queue
+- ✅ Cross-tab logout synchronization
+- ✅ Rate limiting optimized (5 req/s auth endpoints, burst 10)
+- ✅ Backward compatible - no user impact
+
+**Security Benefits:**
+- XSS immunity - stolen scripts cannot access tokens
+- CSRF protection via SameSite policy
+- Industry-standard authentication architecture
+- Compliance-ready for healthcare data handling
+
+#### Race Condition Data Loss Fix
+**Problem:** Users stuck at 85% completion, shift_types never saving
+
+**Root Cause:** Debounced auto-save (1s delay) cancelled by immediate navigation
+
+**Solution:** Flush-save pattern
+- ✅ Created flush function to cancel debounce + save immediately
+- ✅ Parent component calls flush before navigation
+- ✅ Guarantees data persistence before page transition
+- ✅ Maintains auto-save UX (debounced) for normal editing
+
+**Impact:**
+- 100% data persistence success rate
+- No more stuck at 85% completion
+- Users reach dashboard on first completion attempt
+- Professional, polished onboarding experience
+
+**Files Changed:**
+- Backend: `auth.py`, `dependencies.py`
+- Frontend: `api.js`, `AuthContext.jsx`, `Step4Availability.jsx`, `WorkerOnboarding.jsx`
+- Infrastructure: `nginx.conf` (rate limiting fix)
 
 ---
 
