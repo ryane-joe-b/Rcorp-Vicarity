@@ -9,7 +9,7 @@
 
 set -euo pipefail
 
-APP_DIR="/root/vicarity"
+APP_DIR="/home/deploy/vicarity"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 RED='\033[0;31m'
@@ -68,6 +68,7 @@ log_success "vicarity-watchdog.service installed"
 # ---------------------------------------------------------------
 log_info "Creating log file..."
 touch /var/log/vicarity-watchdog.log
+chown deploy:deploy /var/log/vicarity-watchdog.log
 chmod 640 /var/log/vicarity-watchdog.log
 log_success "Log file created at /var/log/vicarity-watchdog.log"
 

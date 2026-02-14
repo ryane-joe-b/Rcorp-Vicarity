@@ -5,6 +5,8 @@ Requires=docker.service
 
 [Service]
 Type=simple
+User=deploy
+Group=deploy
 
 # Run the watchdog script continuously
 ExecStart=/usr/local/bin/vicarity-watchdog.sh

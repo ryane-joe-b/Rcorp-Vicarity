@@ -9,8 +9,11 @@ Wants=network-online.target
 Type=oneshot
 RemainAfterExit=yes
 
-# Where the app lives
-WorkingDirectory=/root/vicarity
+# Where the app lives (deploy user's directory)
+WorkingDirectory=/home/deploy/vicarity
+
+User=deploy
+Group=deploy
 
 # Start: bring up all containers
 ExecStart=/usr/bin/docker compose -f docker-compose.production.yml up -d

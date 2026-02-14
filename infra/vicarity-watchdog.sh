@@ -2,7 +2,7 @@
 # Vicarity Watchdog - monitors and auto-heals crashed containers
 # Installed at: /usr/local/bin/vicarity-watchdog.sh
 
-APP_DIR="/root/vicarity"
+APP_DIR="/home/deploy/vicarity"
 COMPOSE_FILE="docker-compose.production.yml"
 HEALTH_URL="http://localhost/api/health"
 LOG_FILE="/var/log/vicarity-watchdog.log"
