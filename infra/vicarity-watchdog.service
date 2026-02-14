@@ -1,0 +1,17 @@
+[Unit]
+Description=Vicarity Watchdog - Auto-heal crashed containers
+After=vicarity.service
+Requires=docker.service
+
+[Service]
+Type=simple
+
+# Run the watchdog script continuously
+ExecStart=/usr/local/bin/vicarity-watchdog.sh
+
+# Restart if the watchdog itself crashes
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

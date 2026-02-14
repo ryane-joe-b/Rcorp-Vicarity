@@ -1,0 +1,32 @@
+[Unit]
+Description=Vicarity Application (Docker Compose)
+Documentation=https://github.com/ryane-joe-b/Rcorp-Vicarity
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+# Where the app lives
+WorkingDirectory=/root/vicarity
+
+# Start: bring up all containers
+ExecStart=/usr/bin/docker compose -f docker-compose.production.yml up -d
+
+# Stop: bring down gracefully
+ExecStop=/usr/bin/docker compose -f docker-compose.production.yml down
+
+# Reload: rolling restart without downtime
+ExecReload=/usr/bin/docker compose -f docker-compose.production.yml up -d --build
+
+# Ensure compose is found
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# If it fails, wait 10 seconds and retry
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

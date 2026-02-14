@@ -148,13 +148,15 @@ const Step4Availability = ({ onComplete, onPercentageChange, flushSaveRef }) => 
   const saveImmediately = useCallback(async (data) => {
     setSaving(true);
 
-    // Filter out empty strings for number and date fields to avoid validation errors
+    // Filter out empty/null values for fields with DB NOT NULL constraints
     const dataToSave = { ...data };
     if (dataToSave.hours_per_week === '') delete dataToSave.hours_per_week;
     if (dataToSave.travel_radius_miles === '') delete dataToSave.travel_radius_miles;
     if (dataToSave.hourly_rate_min_pence === '') delete dataToSave.hourly_rate_min_pence;
     if (dataToSave.hourly_rate_max_pence === '') delete dataToSave.hourly_rate_max_pence;
     if (dataToSave.available_start_date === '') delete dataToSave.available_start_date;
+    // has_own_transport is NOT NULL in DB - don't send null (user hasn't selected yet)
+    if (dataToSave.has_own_transport === null) delete dataToSave.has_own_transport;
 
     console.log('Step 4: Saving data to backend (immediate):', dataToSave);
     try {
