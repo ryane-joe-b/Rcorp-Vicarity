@@ -253,7 +253,7 @@ We welcome contributions! Please:
 
 ---
 
-**Last Updated**: February 7, 2026
-**Version**: 1.4.0 (Cookie-Based Auth + Race Condition Fix + Onboarding Complete)
+**Last Updated**: February 15, 2026
+**Version**: 1.5.0 (Documentation audit — cookie auth, rate limits, component tree, frontend status all corrected)
 
 Built with care for the care industry 💚🧡

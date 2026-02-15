@@ -1,6 +1,6 @@
 # VICARITY - PROJECT STATUS
 
-**Date:** February 7, 2026
+**Date:** February 15, 2026
 **Domain:** vicarity.co.uk
 **Status:** Backend Live, Landing Page Complete, Cookie Auth Complete, Worker Onboarding Complete (100%)
 **Recent Update:** Migrated to HTTP-only cookie authentication (XSS protection) + Fixed race condition causing data loss in Step 4 (flush-save pattern)
@@ -114,7 +114,7 @@ Vicarity is a care worker marketplace platform connecting qualified care workers
 - HSTS with preload
 - CSP headers
 - X-Frame-Options, X-Content-Type-Options
-- Rate limiting (10 req/s general, 5 req/min auth)
+- Rate limiting (20 req/s general burst 40, 5 req/s auth burst 15)
 - Connection limits per IP
 
 **Routing:**
@@ -486,7 +486,7 @@ See `vibe/LANDING_PAGE_TODO.md` for detailed Phase 3 tasks:
 
 ### LOW PRIORITY
 
-#### 4. Worker Dashboard (Placeholder)
+#### 4. Worker Dashboard (Placeholder) — **#1 NEXT PRIORITY**
 **File:** `src/pages/worker/WorkerDashboard.jsx`
 
 **For now (placeholder):**
@@ -740,7 +740,7 @@ git push origin main
 
 ---
 
-**Last Updated:** February 6, 2026
+**Last Updated:** February 15, 2026
 **Recent Changes:**
 - ✅ Worker Onboarding Wizard complete - all 4 steps live in production
 - ✅ Step 2: Qualifications with DBS and right to work

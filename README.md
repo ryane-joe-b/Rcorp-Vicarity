@@ -4,7 +4,7 @@
 
 [![Status](https://img.shields.io/badge/status-production-green)](https://vicarity.co.uk)
 [![Backend](https://img.shields.io/badge/backend-100%25-success)](./api)
-[![Frontend](https://img.shields.io/badge/frontend-20%25-orange)](./web)
+[![Frontend](https://img.shields.io/badge/frontend-75%25-yellow)](./web)
 [![Infrastructure](https://img.shields.io/badge/infrastructure-100%25-success)](./infra)
 
 **Live Site**: [vicarity.co.uk](https://vicarity.co.uk)
@@ -127,10 +127,10 @@ The platform is built with a production-ready FastAPI backend, React frontend, a
 | Database Migrations | ✅ Production | 100% | Auto-run in CI/CD |
 
 **Next Priorities**:
-1. Run database migrations (5 mins)
-2. Set up SSL certificate (10 mins)
-3. Build frontend authentication infrastructure (1-2 hours)
-4. Create landing page and registration flow (2-3 hours)
+1. Worker Dashboard with job board (16-20 hours)
+2. Password reset pages — backend ready, need frontend (3-4 hours)
+3. Care Home profile completion form (6-8 hours)
+4. Profile photo upload to Cloudinary/S3 (4-6 hours)
 
 See [vibe/PROJECT_STATUS.md](./vibe/PROJECT_STATUS.md) for detailed status tracking.
 
@@ -482,13 +482,13 @@ For questions or issues:
 
 ## Roadmap
 
-### Phase 1: MVP (Current)
+### Phase 1: MVP (Complete)
 - ✅ Backend API with authentication
 - ✅ Database models and relationships
 - ✅ Email verification system
 - ✅ Production infrastructure
-- 🚧 Frontend authentication flows
-- 🚧 Profile completion wizards
+- ✅ Frontend authentication flows (login, register, verify)
+- ✅ Worker profile completion wizard (4-step, auto-save)
 
 ### Phase 2: Core Features
 - Job board for workers

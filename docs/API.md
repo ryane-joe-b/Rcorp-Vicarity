@@ -21,37 +21,40 @@ Complete reference for the Vicarity REST API.
 
 ## Authentication
 
-All authenticated endpoints require a JWT access token in the Authorization header:
+Authentication uses **HTTP-only cookies** (not Authorization headers). Tokens are stored in secure cookies set by the backend — JavaScript cannot access them.
 
-```http
-Authorization: Bearer <access_token>
+The browser sends cookies automatically with every request. You do **not** need to set any headers manually.
+
+```javascript
+// Correct: withCredentials sends cookies automatically
+const api = axios.create({ withCredentials: true });
+
+// Wrong: tokens are NOT in localStorage or headers
+// localStorage.getItem('access_token') → undefined
 ```
 
 ### Token Types
 
-| Token Type | Expiry | Usage |
-|------------|--------|-------|
-| Access Token | 30 minutes | API requests |
-| Refresh Token | 7 days | Refresh access token |
-| Email Verification | 24 hours | Verify email address |
-| Password Reset | 24 hours | Reset password |
+| Token Type | Expiry | Storage |
+|------------|--------|---------|
+| Access Token | 30 minutes | HTTP-only cookie (`access_token`) |
+| Refresh Token | 7 days | HTTP-only cookie (`refresh_token`) |
+| Email Verification | 24 hours | Email link only |
+| Password Reset | 1 hour | Email link only |
 
 ### Token Refresh Flow
 
-When an access token expires (401 response), use the refresh token to get a new access token:
+When an access token expires (401 response), the Axios interceptor automatically calls `/api/auth/refresh`. The refresh token is read from the cookie by the backend — no request body needed.
 
 ```javascript
-// Example refresh flow
-if (response.status === 401) {
-  const refreshResponse = await fetch('/api/auth/refresh', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refresh_token: storedRefreshToken })
-  });
-  const { access_token } = await refreshResponse.json();
-  // Retry original request with new token
-}
+// Automatic refresh via Axios interceptor (api.js)
+// When a 401 is received:
+await api.post('/auth/refresh');  // backend reads refresh_token cookie
+// New access_token and refresh_token cookies are set automatically
+// Original request is retried
 ```
+
+The frontend queues concurrent requests during a refresh to prevent multiple simultaneous refresh calls.
 
 ---
 
@@ -111,15 +114,16 @@ Authenticate user and receive JWT tokens.
 **Success Response** (200 OK):
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "token_type": "bearer",
+  "access_token": "",
+  "refresh_token": "",
   "user_id": "550e8400-e29b-41d4-a716-446655440000",
   "user_type": "worker",
   "email_verified": true,
   "profile_complete": false
 }
 ```
+
+**Note**: `access_token` and `refresh_token` in the JSON body are always empty strings. The actual tokens are set as **HTTP-only cookies** by the backend (`Set-Cookie` headers). The browser stores and sends them automatically.
 
 **Response Fields**:
 - `profile_complete`: Only present for workers (null for care homes)
@@ -166,27 +170,23 @@ Verify user's email address using the token sent via email.
 
 ### Refresh Access Token
 
-Get a new access token using a refresh token.
+Get new tokens using the refresh token cookie.
 
 **Endpoint**: `POST /api/auth/refresh`
 
-**Request Body**:
-```json
-{
-  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
+**Request Body**: None — the backend reads the `refresh_token` cookie automatically.
 
 **Success Response** (200 OK):
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "token_type": "bearer"
+  "access_token": ""
 }
 ```
 
+New `access_token` and `refresh_token` cookies are set via `Set-Cookie` headers (token rotation). The JSON body `access_token` field is always empty.
+
 **Error Responses**:
-- `401 Unauthorized`: Invalid or expired refresh token
+- `401 Unauthorized`: Invalid, expired, or missing refresh token cookie
 
 ---
 
@@ -196,7 +196,7 @@ Get authenticated user's profile information.
 
 **Endpoint**: `GET /api/auth/me`
 
-**Headers**: Requires `Authorization: Bearer <access_token>`
+**Authentication**: Requires `access_token` cookie (sent automatically by browser).
 
 **Success Response** (200 OK) - Worker:
 ```json
@@ -323,7 +323,7 @@ Get the authenticated worker's profile.
 
 **Endpoint**: `GET /api/worker/profile`
 
-**Headers**: Requires `Authorization: Bearer <access_token>`
+**Authentication**: Requires `access_token` cookie (sent automatically by browser).
 
 **Success Response** (200 OK):
 ```json
@@ -381,7 +381,7 @@ Update worker profile (any step of the wizard).
 
 **Endpoint**: `PUT /api/worker/profile`
 
-**Headers**: Requires `Authorization: Bearer <access_token>`
+**Authentication**: Requires `access_token` cookie (sent automatically by browser).
 
 **Request Body** (all fields optional):
 ```json
@@ -452,7 +452,7 @@ Get the authenticated care home's profile.
 
 **Endpoint**: `GET /api/care-home/profile`
 
-**Headers**: Requires `Authorization: Bearer <access_token>`
+**Authentication**: Requires `access_token` cookie (sent automatically by browser).
 
 **Success Response** (200 OK):
 ```json
@@ -492,7 +492,7 @@ Update care home profile.
 
 **Endpoint**: `PUT /api/care-home/profile`
 
-**Headers**: Requires `Authorization: Bearer <access_token>`
+**Authentication**: Requires `access_token` cookie (sent automatically by browser).
 
 **Request Body** (all fields optional):
 ```json
@@ -629,13 +629,13 @@ All error responses follow this format:
 Rate limits are enforced by Nginx to protect against abuse:
 
 ### General Endpoints
-- **Limit**: 10 requests per second per IP
-- **Burst**: 20 requests
+- **Limit**: 20 requests per second per IP
+- **Burst**: 40 requests
 - **Response**: `429 Too Many Requests`
 
 ### Authentication Endpoints
-- **Limit**: 5 requests per minute per IP
-- **Burst**: 10 requests
+- **Limit**: 5 requests per second per IP
+- **Burst**: 15 requests
 - **Applies to**: `/api/auth/login`, `/api/auth/register`, `/api/auth/password-reset-*`
 
 ### Rate Limit Response
@@ -699,97 +699,59 @@ When pagination is implemented for list endpoints:
 ### Complete Registration Flow
 
 ```javascript
+// All requests must include withCredentials: true for cookies to work
+// The project's api.js (Axios instance) handles this automatically
+
 // 1. Register
-const registerRes = await fetch('/api/auth/register', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    email: 'worker@example.com',
-    password: 'SecurePass123!',
-    user_type: 'worker'
-  })
+const { user_id } = await authApi.register({
+  email: 'worker@example.com',
+  password: 'SecurePass123!',
+  user_type: 'worker'
 });
-const { user_id } = await registerRes.json();
 
 // 2. User checks email and clicks verification link
 // Link contains: https://vicarity.co.uk/verify-email?token=...
 
 // 3. Frontend verifies email
-const verifyRes = await fetch('/api/auth/verify-email', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ token: tokenFromUrl })
-});
-const { redirect_to } = await verifyRes.json();
+const { redirect_to } = await authApi.verifyEmail(tokenFromUrl);
 
-// 4. Login after verification
-const loginRes = await fetch('/api/auth/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    email: 'worker@example.com',
-    password: 'SecurePass123!'
-  })
-});
-const { access_token, refresh_token, profile_complete } = await loginRes.json();
+// 4. Login — backend sets HTTP-only cookies automatically
+await authApi.login('worker@example.com', 'SecurePass123!');
+// No tokens in response body — cookies are set via Set-Cookie headers
 
-// 5. Complete profile if needed
-if (!profile_complete) {
-  const profileRes = await fetch('/api/worker/profile', {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${access_token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      first_name: 'John',
-      last_name: 'Doe',
-      // ... other fields
-    })
+// 5. Get user state for routing
+const user = await authApi.getCurrentUser();
+// { role: 'worker', profile_complete: false, ... }
+
+// 6. Complete profile if needed (cookies sent automatically)
+if (!user.profile_complete) {
+  await workerApi.updateProfile({
+    first_name: 'John',
+    last_name: 'Doe',
+    // ... other fields
   });
 }
 ```
 
 ### Token Refresh Example
 
+Token refresh is handled automatically by the Axios interceptor in `api.js`. You do not need to implement this manually:
+
 ```javascript
-async function apiCall(url, options = {}) {
-  let response = await fetch(url, {
-    ...options,
-    headers: {
-      ...options.headers,
-      'Authorization': `Bearer ${accessToken}`
-    }
-  });
-  
-  // If token expired, refresh and retry
-  if (response.status === 401) {
-    const refreshRes = await fetch('/api/auth/refresh', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: refreshToken })
-    });
-    
-    if (refreshRes.ok) {
-      const { access_token } = await refreshRes.json();
-      accessToken = access_token;
-      
-      // Retry original request
-      response = await fetch(url, {
-        ...options,
-        headers: {
-          ...options.headers,
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
-    } else {
-      // Refresh failed, redirect to login
-      window.location.href = '/login';
-    }
-  }
-  
-  return response;
-}
+// This happens automatically in api.js when any request returns 401:
+// 1. POST /api/auth/refresh  (backend reads refresh_token cookie)
+// 2. New cookies are set by backend
+// 3. Original request is retried
+// 4. If refresh fails → redirect to /auth/login
+
+// You never need to manually handle tokens — just use the api.js instance
+import api, { workerApi, authApi } from './services/api';
+```
+
+**Get Profile (cURL with cookies)**:
+```bash
+curl -X GET https://vicarity.co.uk/api/worker/profile \
+  -H "Cookie: access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
 ---
@@ -828,10 +790,11 @@ curl -X POST https://vicarity.co.uk/api/auth/login \
   }'
 ```
 
-**Get Profile** (with auth):
+**Get Profile** (with auth cookie):
 ```bash
 curl -X GET https://vicarity.co.uk/api/worker/profile \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  -H "Cookie: access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+# In browser: cookies sent automatically via withCredentials: true
 ```
 
 ---

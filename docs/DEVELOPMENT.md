@@ -198,7 +198,7 @@ class JobResponse(BaseModel):
 
 3. **Test the endpoint**:
 - Visit http://localhost:8000/docs
-- Or use curl: `curl http://localhost:8000/api/worker/jobs -H "Authorization: Bearer <token>"`
+- Or use curl: `curl http://localhost:8000/api/worker/jobs -H "Cookie: access_token=<token>"`
 
 ### Database Migrations
 
@@ -265,36 +265,34 @@ App will be available at: http://localhost:3000
 
 Hot reload is enabled - changes automatically refresh the browser.
 
-### Project Structure (Planned)
+### Project Structure
 
 ```
 web/
 ├── src/
-│   ├── components/          # Reusable components
-│   │   ├── common/          # Buttons, inputs, etc.
-│   │   ├── auth/            # Login, register forms
-│   │   └── layout/          # Header, footer, nav
+│   ├── components/
+│   │   ├── layout/          # ✅ Navbar, Footer
+│   │   ├── sections/        # ✅ All landing page sections
+│   │   ├── shared/          # ✅ Container, ProtectedRoute
+│   │   ├── ui/buttons/      # ✅ PrimaryButton, SecondaryButton
+│   │   └── onboarding/      # ✅ Wizard steps, ProgressStepper
 │   │
-│   ├── pages/               # Page components
-│   │   ├── auth/
-│   │   ├── worker/
-│   │   └── care-home/
+│   ├── pages/
+│   │   ├── landing/         # ✅ LandingPage.jsx
+│   │   ├── auth/            # ✅ Login, WorkerRegistration, CareHomeRegistration, EmailVerification
+│   │   ├── onboarding/      # ✅ WorkerOnboarding.jsx
+│   │   ├── worker/          # ⏸️ Dashboard (not started)
+│   │   └── care-home/       # ⏸️ Dashboard (not started)
 │   │
-│   ├── contexts/            # React Context
-│   │   └── AuthContext.jsx
+│   ├── contexts/            # ✅ AuthContext.jsx
+│   ├── services/            # ✅ api.js (cookie auth + auto-refresh)
 │   │
-│   ├── services/            # API calls
-│   │   └── api.js
-│   │
-│   ├── utils/               # Helpers
-│   │   └── validators.js
-│   │
-│   ├── App.js               # Root component
-│   └── index.js             # Entry point
+│   ├── App.js               # ✅ Root component with all routes
+│   └── index.js             # ✅ Entry point
 │
-├── public/                  # Static files
+├── public/
 ├── package.json
-└── tailwind.config.js       # Tailwind config
+└── tailwind.config.js
 ```
 
 ### Creating New Components
@@ -340,38 +338,39 @@ function LoginPage() {
 
 ### API Integration
 
+Authentication uses **HTTP-only cookies** — tokens are never stored in localStorage or set as headers. The `api.js` service handles everything automatically.
+
 ```javascript
 // src/services/api.js
 import axios from 'axios';
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || '/api',
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,  // CRITICAL: sends cookies with every request
 });
 
-// Add auth token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Handle token refresh on 401
+// Automatic token refresh on 401 (no manual token management needed)
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      // Refresh token logic here
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      // POST /auth/refresh — backend reads refresh_token cookie
+      await api.post('/auth/refresh');
+      // New cookies set automatically, retry original request
+      return api(originalRequest);
     }
     return Promise.reject(error);
   }
 );
 
 export default api;
+
+// Usage — no token handling needed:
+export const workerApi = {
+  getProfile: async () => (await api.get('/worker/profile')).data,
+  updateProfile: async (data) => (await api.put('/worker/profile', data)).data,
+};
 ```
 
 ### Styling with Tailwind

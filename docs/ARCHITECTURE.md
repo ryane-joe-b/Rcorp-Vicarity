@@ -237,22 +237,22 @@ Pydantic models separate API contracts from database models:
 
 ## Frontend Architecture
 
-### Component Structure (Phase 1 Implemented)
+### Component Structure (Current State)
 
-**Status:** Landing Page Phase 1 Complete (60%)  
-**See:** `vibe/LANDING_PAGE_IMPLEMENTATION.md` for detailed documentation
+**Status:** Landing Page ✅, Authentication ✅, Worker Onboarding ✅, Dashboards ⏸️
+**See:** `vibe/PROJECT_STATUS.md` for detailed progress tracking
 
 ```
 web/
 ├── src/
-│   ├── components/              
+│   ├── components/
 │   │   ├── layout/              # ✅ Layout components
 │   │   │   ├── Navbar/
 │   │   │   │   └── Navbar.jsx   # Sticky nav with mobile menu
 │   │   │   └── Footer/
 │   │   │       └── Footer.jsx   # 4-column footer
 │   │   │
-│   │   ├── sections/            # ✅ Landing page sections
+│   │   ├── sections/            # ✅ Landing page sections (all complete)
 │   │   │   ├── Hero/
 │   │   │   │   └── HeroSection.jsx        # Hero with dual CTAs
 │   │   │   ├── Stats/
@@ -262,11 +262,11 @@ web/
 │   │   │   │   └── ValuePropSection.jsx   # Worker/home benefits
 │   │   │   ├── FinalCTA/
 │   │   │   │   └── FinalCTASection.jsx    # Bottom CTA
-│   │   │   ├── HowItWorks/                # ⏸️ Phase 2
-│   │   │   ├── Trust/                     # ⏸️ Phase 2
-│   │   │   ├── Testimonials/              # ⏸️ Phase 2
-│   │   │   ├── FAQ/                       # ⏸️ Phase 2
-│   │   │   └── Qualifications/            # ⏸️ Phase 2
+│   │   │   ├── HowItWorks/                # ✅ Dual-path timeline
+│   │   │   ├── Trust/                     # ✅ 8 trust badges
+│   │   │   ├── Testimonials/              # ✅ Carousel with 6 testimonials
+│   │   │   ├── FAQ/                       # ✅ 14 questions accordion
+│   │   │   └── Qualifications/            # ✅ 24+ qualifications showcase
 │   │   │
 │   │   ├── ui/                  # ✅ Reusable UI components
 │   │   │   └── buttons/
@@ -274,36 +274,48 @@ web/
 │   │   │       └── SecondaryButton.jsx    # Outline buttons
 │   │   │
 │   │   ├── shared/              # ✅ Shared utilities
-│   │   │   └── Container.jsx    # Responsive container
+│   │   │   ├── Container.jsx    # Responsive container
+│   │   │   └── ProtectedRoute.jsx  # Role + completion-based route guard
 │   │   │
-│   │   ├── auth/                # ⏸️ Auth components (not started)
-│   │   └── common/              # ⏸️ Common components (not started)
+│   │   └── onboarding/          # ✅ Onboarding wizard components
+│   │       ├── ProgressStepper.jsx
+│   │       ├── PostcodeLookup.jsx
+│   │       ├── CameraUpload.jsx
+│   │       ├── OnboardingErrorBoundary.jsx
+│   │       └── steps/
+│   │           ├── Step1Personal.jsx
+│   │           ├── Step2Qualifications.jsx
+│   │           ├── Step3Experience.jsx
+│   │           └── Step4Availability.jsx
 │   │
 │   ├── pages/                   # ✅ Route-level components
 │   │   ├── landing/
-│   │   │   └── LandingPage.jsx  # Main landing page (Phase 1)
-│   │   ├── auth/                # ⏸️ Auth pages (not started)
-│   │   ├── worker/              # ⏸️ Worker pages (not started)
-│   │   └── care-home/           # ⏸️ Care home pages (not started)
+│   │   │   └── LandingPage.jsx  # Main landing page
+│   │   ├── auth/                # ✅ Auth pages
+│   │   │   ├── Login.jsx
+│   │   │   ├── WorkerRegistration.jsx
+│   │   │   ├── CareHomeRegistration.jsx
+│   │   │   └── EmailVerification.jsx
+│   │   ├── onboarding/          # ✅ Onboarding wizard
+│   │   │   └── WorkerOnboarding.jsx
+│   │   ├── worker/              # ⏸️ Worker dashboard (not started)
+│   │   └── care-home/           # ⏸️ Care home dashboard (not started)
 │   │
 │   ├── services/                # ✅ API communication
-│   │   └── api.js               # Axios instance + public API methods
+│   │   └── api.js               # Axios + cookie auth + auto-refresh interceptor
 │   │
-│   ├── hooks/                   # ✅ Custom React hooks
-│   │   └── usePublicStats.js    # Stats fetching with auto-refresh
+│   ├── contexts/                # ✅ React Context providers
+│   │   └── AuthContext.jsx      # Global auth state, login/logout/register
 │   │
-│   ├── contexts/                # ⏸️ React Context providers (not started)
-│   ├── utils/                   # ⏸️ Utility functions (not started)
-│   │
-│   ├── App.js                   # ✅ Root component (renders LandingPage)
+│   ├── App.js                   # ✅ Root component with all routes
 │   ├── index.js                 # ✅ React entry point
 │   └── index.css                # ✅ Global styles (Tailwind + customs)
 │
-├── public/                      
-│   ├── index.html               
+├── public/
+│   ├── index.html
 │   └── favicon.ico
 │
-└── package.json                 
+└── package.json
 ```
 
 ### Design System
@@ -326,15 +338,15 @@ web/
 
 ### State Management Strategy
 
-**Current Implementation (Phase 1):**
+**Current Implementation:**
 - **Local State**: `useState` for component state
-- **Custom Hooks**: `usePublicStats` for API data
-- **API Service**: Axios with interceptors
+- **Global Auth State**: `AuthContext` — login, logout, register, email verification, refresh
+- **Custom Hooks**: `usePublicStats`, `useQualifications` for landing page data
+- **API Service**: Axios with `withCredentials: true` + auto-refresh interceptor
+- **Form State**: Controlled components with real-time validation + debounced auto-save
 
-**Planned (Future Phases):**
-- **Global Auth State**: Context API for authentication  
-- **Server State**: React Query for API data caching  
-- **Form State**: Controlled components with validation
+**Planned (Future):**
+- **Server State**: React Query for job board data caching
 
 ### API Integration
 
