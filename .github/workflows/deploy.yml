@@ -290,6 +290,14 @@ jobs:
 
             # Run database migrations
             echo "=== Running database migrations ==="
+
+            # The alembic_version table may have multiple rows (multiple heads) from
+            # prior deployments. Stamp to the last known-good single revision so the
+            # chain is clean, then upgrade to apply any new migrations on top.
+            echo "Resolving migration state to 003_rename_hourly_rate_fields..."
+            docker compose -f docker-compose.production.yml exec -T api alembic stamp 003_rename_hourly_rate_fields 2>&1
+
+            echo "Upgrading to head..."
             docker compose -f docker-compose.production.yml exec -T api alembic upgrade head
             if [ $? -eq 0 ]; then
               echo "✅ Migrations completed successfully"
