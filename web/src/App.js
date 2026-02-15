@@ -12,6 +12,8 @@ import CareHomeRegistration from './pages/auth/CareHomeRegistration';
 import Login from './pages/auth/Login';
 import EmailVerification from './pages/auth/EmailVerification';
 import WorkerOnboarding from './pages/onboarding/WorkerOnboarding';
+import WorkerDashboard from './pages/worker/Dashboard';
+import WorkerJobs from './pages/worker/Jobs';
 
 import './index.css';
 
@@ -73,12 +75,16 @@ function App() {
               path="/dashboard/worker"
               element={
                 <ProtectedRoute requireRole="worker" requireCompleteProfile={true}>
-                  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sage-50 via-white to-warm-50">
-                    <div className="text-center">
-                      <h1 className="text-4xl font-bold text-charcoal-900 mb-4">Worker Dashboard</h1>
-                      <p className="text-gray-600">Coming soon! Your profile is complete.</p>
-                    </div>
-                  </div>
+                  <WorkerDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/dashboard/worker/jobs"
+              element={
+                <ProtectedRoute requireRole="worker" requireCompleteProfile={true}>
+                  <WorkerJobs />
                 </ProtectedRoute>
               }
             />

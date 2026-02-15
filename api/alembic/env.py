@@ -8,7 +8,7 @@ from alembic import context
 # Import Base and all models
 from app.core.database import Base
 from app.core.config import settings
-from app.models import user, worker_profile, care_home_profile, qualification
+from app.models import user, worker_profile, care_home_profile, qualification, job, application
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

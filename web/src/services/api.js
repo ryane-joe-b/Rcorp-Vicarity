@@ -223,6 +223,24 @@ export const workerApi = {
     const response = await api.put('/worker/profile', profileData);
     return response.data;
   },
+
+  getDashboard: async () => (await api.get('/worker/dashboard')).data,
+  getJobs: async (params) => (await api.get('/worker/jobs', { params })).data,
+  getJob: async (id) => (await api.get(`/worker/jobs/${id}`)).data,
+  applyToJob: async (data) => (await api.post('/worker/applications', data)).data,
+  getApplications: async () => (await api.get('/worker/applications')).data,
+  withdrawApplication: async (id) => (await api.delete(`/worker/applications/${id}`)).data,
+};
+
+// Care Home API endpoints
+export const careHomeApi = {
+  getProfile: async () => (await api.get('/care-home/profile')).data,
+  updateProfile: async (data) => (await api.put('/care-home/profile', data)).data,
+  createJob: async (data) => (await api.post('/care-home/jobs', data)).data,
+  getJobs: async () => (await api.get('/care-home/jobs')).data,
+  updateJob: async (id, data) => (await api.put(`/care-home/jobs/${id}`, data)).data,
+  deleteJob: async (id) => (await api.delete(`/care-home/jobs/${id}`)).data,
+  getJobApplications: async (id) => (await api.get(`/care-home/jobs/${id}/applications`)).data,
 };
 
 export default api;
