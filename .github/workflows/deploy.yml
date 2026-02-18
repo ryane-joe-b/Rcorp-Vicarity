@@ -270,16 +270,19 @@ jobs:
             
             # Stop all services (gracefully handle if already stopped)
             echo "Stopping all services..."
-            docker compose -f docker-compose.production.yml down || true
-            
+            docker compose -f docker-compose.production.yml down --remove-orphans || true
+
+            # Prune stopped containers to clear any stale container references
+            docker container prune -f || true
+
             # Remove web-static volume to force fresh React build
             echo "Removing web-static volume for fresh build..."
             docker volume rm vicarity_web-static 2>/dev/null || echo "Volume doesn't exist (first deploy or already removed)"
-            
+
             # Build all services with no cache
             echo "Building all services with no cache..."
             docker compose -f docker-compose.production.yml build --no-cache
-            
+
             # Start all services
             echo "Starting all services..."
             docker compose -f docker-compose.production.yml up -d
