@@ -100,6 +100,9 @@ class WorkerProfile(Base):
     # Right to work
     right_to_work_status = Column(String(50), nullable=True)
     right_to_work_document_url = Column(String(500), nullable=True)
+
+    # Availability flag — visible to employers
+    is_available = Column(Boolean, default=False, nullable=False)
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

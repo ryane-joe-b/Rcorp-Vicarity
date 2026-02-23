@@ -5,6 +5,7 @@ Worker profile router - profile completion and management.
 from typing import Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -16,6 +17,16 @@ from app.models.application import Application, ApplicationStatus
 from app.schemas.worker import WorkerProfileUpdate, WorkerProfileResponse
 from app.schemas.job import JobResponse, JobListResponse
 from app.schemas.application import ApplicationCreate, ApplicationResponse
+
+
+# In-demand qualifications used for skill gap analysis
+DEMAND_QUALS = [
+    {"code": "FIRST_AID_LVL3", "name": "First Aid Level 3", "jobs_unlocked": 18},
+    {"code": "MANUAL_HANDLING", "name": "Manual Handling", "jobs_unlocked": 24},
+    {"code": "MEDICATION_ADMIN", "name": "Medication Administration", "jobs_unlocked": 21},
+    {"code": "DEMENTIA_CARE", "name": "Dementia Care", "jobs_unlocked": 15},
+    {"code": "FIRE_SAFETY", "name": "Fire Safety", "jobs_unlocked": 12},
+]
 
 
 router = APIRouter(prefix="/worker", tags=["worker-profile"])
@@ -88,9 +99,16 @@ def get_worker_dashboard(
 
     applications_count = 0
     recent_applications = []
+    shortlisted_count = 0
+
     if profile:
         applications_count = db.query(Application).filter(
             Application.worker_id == profile.id
+        ).count()
+
+        shortlisted_count = db.query(Application).filter(
+            Application.worker_id == profile.id,
+            Application.status == ApplicationStatus.SHORTLISTED,
         ).count()
 
         recent_apps = (
@@ -117,13 +135,135 @@ def get_worker_dashboard(
 
     active_jobs_count = db.query(Job).filter(Job.status == JobStatus.ACTIVE).count()
 
+    # --- Profile boost tips ---
+    profile_boost_tips = []
+    if profile:
+        if not profile.profile_picture_url:
+            profile_boost_tips.append({"message": "Add a profile photo", "points": 5})
+        if not profile.bio or len(profile.bio) < 50:
+            profile_boost_tips.append({"message": "Write a short bio (50+ chars)", "points": 10})
+        if not profile.qualifications or len(profile.qualifications) < 2:
+            profile_boost_tips.append({"message": "Add 2+ qualifications", "points": 15})
+        if not profile.is_available:
+            profile_boost_tips.append({"message": "Set yourself as available", "points": 5})
+
+    # --- Badges ---
+    badges = []
+    if profile:
+        badges = [
+            {
+                "id": "profile_star",
+                "name": "Profile Star",
+                "description": "Reach 80%+ profile completion",
+                "earned": profile_completion >= 80,
+                "icon_key": "star",
+            },
+            {
+                "id": "early_bird",
+                "name": "Early Bird",
+                "description": "Set an available start date",
+                "earned": bool(profile.available_start_date),
+                "icon_key": "bird",
+            },
+            {
+                "id": "job_hunter",
+                "name": "Job Hunter",
+                "description": "Apply to 5 or more jobs",
+                "earned": applications_count >= 5,
+                "icon_key": "search",
+            },
+            {
+                "id": "well_qualified",
+                "name": "Well Qualified",
+                "description": "Add 3 or more qualifications",
+                "earned": bool(profile.qualifications and len(profile.qualifications) >= 3),
+                "icon_key": "certificate",
+            },
+            {
+                "id": "available_now",
+                "name": "Available Now",
+                "description": "Mark yourself as available to employers",
+                "earned": profile.is_available,
+                "icon_key": "check_circle",
+            },
+        ]
+
+    # --- Skill gaps ---
+    skill_gaps = []
+    if profile:
+        worker_codes = {q["code"] for q in (profile.qualifications or []) if isinstance(q, dict) and "code" in q}
+        for qual in DEMAND_QUALS:
+            if qual["code"] not in worker_codes:
+                skill_gaps.append(qual)
+            if len(skill_gaps) == 3:
+                break
+
+    # --- Recommended jobs ---
+    recommended_jobs = []
+    if profile and profile.shift_types:
+        matched = (
+            db.query(Job)
+            .filter(Job.status == JobStatus.ACTIVE, Job.shift_type.in_(profile.shift_types))
+            .order_by(Job.created_at.desc())
+            .limit(5)
+            .all()
+        )
+        recommended_jobs = matched
+
+    if not recommended_jobs:
+        recommended_jobs = (
+            db.query(Job)
+            .filter(Job.status == JobStatus.ACTIVE)
+            .order_by(Job.created_at.desc())
+            .limit(5)
+            .all()
+        )
+
+    recommended_jobs_data = [
+        {
+            "id": str(j.id),
+            "title": j.title,
+            "care_home_name": j.care_home.business_name if j.care_home else None,
+            "location": j.location,
+            "shift_type": j.shift_type.value,
+            "hourly_rate_min": float(j.hourly_rate_min) if j.hourly_rate_min is not None else None,
+            "hourly_rate_max": float(j.hourly_rate_max) if j.hourly_rate_max is not None else None,
+        }
+        for j in recommended_jobs
+    ]
+
     return {
         "profile_completion": profile_completion,
         "applications_count": applications_count,
+        "shortlisted_count": shortlisted_count,
         "active_jobs_count": active_jobs_count,
         "recent_applications": recent_applications,
         "worker_name": profile.first_name if profile else None,
+        "is_available": profile.is_available if profile else False,
+        "profile_boost_tips": profile_boost_tips,
+        "badges": badges,
+        "skill_gaps": skill_gaps,
+        "recommended_jobs": recommended_jobs_data,
     }
+
+
+class AvailabilityUpdate(BaseModel):
+    is_available: bool
+
+
+@router.patch("/availability")
+def update_availability(
+    body: AvailabilityUpdate,
+    current_user: User = Depends(get_current_worker),
+    db: Session = Depends(get_db)
+):
+    """Toggle worker availability — no complete profile required."""
+    profile = current_user.worker_profile
+    if not profile:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Worker profile not found")
+    profile.is_available = body.is_available
+    db.commit()
+    return {"is_available": profile.is_available}
 
 
 @router.get("/jobs", response_model=JobListResponse)

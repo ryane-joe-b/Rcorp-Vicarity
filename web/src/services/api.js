@@ -225,6 +225,7 @@ export const workerApi = {
   },
 
   getDashboard: async () => (await api.get('/worker/dashboard')).data,
+  updateAvailability: async (isAvailable) => (await api.patch('/worker/availability', { is_available: isAvailable })).data,
   getJobs: async (params) => (await api.get('/worker/jobs', { params })).data,
   getJob: async (id) => (await api.get(`/worker/jobs/${id}`)).data,
   applyToJob: async (data) => (await api.post('/worker/applications', data)).data,

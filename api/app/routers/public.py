@@ -48,9 +48,9 @@ async def get_public_stats(db: Session = Depends(get_db)) -> Dict[str, Any]:
     ).count()
     
     # Calculate average worker profile completion
-    avg_completion = db.query(
+    avg_completion = float(db.query(
         func.avg(WorkerProfile.profile_completion_percentage)
-    ).scalar() or 0
+    ).scalar() or 0)
     
     # Get recent user registrations (last 7 days)
     week_ago = datetime.utcnow() - timedelta(days=7)
@@ -92,10 +92,10 @@ async def get_qualifications(db: Session = Depends(get_db)) -> Dict[str, Any]:
     
     result = []
     for qual in qualifications:
-        # Count workers with this qualification
-        # WorkerProfile.qualifications is JSONB array of qualification IDs
+        # Count workers with this qualification using JSONB @> containment operator
+        # qualifications stores [{"code": "DBS_ENHANCED", ...}] objects
         worker_count = db.query(WorkerProfile).filter(
-            func.jsonb_exists(WorkerProfile.qualifications, str(qual.id))
+            WorkerProfile.qualifications.contains([{"code": qual.code}])
         ).count()
         
         result.append({
