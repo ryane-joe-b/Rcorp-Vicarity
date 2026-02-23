@@ -286,6 +286,16 @@ jobs:
             # Run database migrations BEFORE starting the API
             # Uses a one-shot container so the API never starts against a stale schema
             echo "=== Running database migrations ==="
+
+            # Step 1: fix any stale multiple-head state in alembic_version
+            echo "Checking for multiple migration heads..."
+            docker compose -f docker-compose.production.yml run --rm api python scripts/fix_migration_heads.py
+            if [ $? -ne 0 ]; then
+              echo "❌ Migration head fix failed! Aborting."
+              exit 1
+            fi
+
+            # Step 2: upgrade to latest head
             docker compose -f docker-compose.production.yml run --rm api alembic upgrade head
             if [ $? -eq 0 ]; then
               echo "✅ Migrations completed successfully"
