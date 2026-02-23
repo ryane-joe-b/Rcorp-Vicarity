@@ -297,10 +297,20 @@ jobs:
 
             # Step 2: upgrade to latest head
             docker compose -f docker-compose.production.yml run --rm api alembic upgrade head
-            if [ $? -eq 0 ]; then
-              echo "✅ Migrations completed successfully"
-            else
+            if [ $? -ne 0 ]; then
               echo "❌ Migrations failed! Aborting deployment."
+              exit 1
+            fi
+
+            # Step 3: assert DB is actually at head — catches silent transaction rollbacks
+            echo "Verifying migration state..."
+            CURRENT=$(docker compose -f docker-compose.production.yml run --rm api alembic current 2>&1)
+            echo "Migration state: $CURRENT"
+            if echo "$CURRENT" | grep -q "(head)"; then
+              echo "✅ Migrations verified at head"
+            else
+              echo "❌ Migration verification failed — DB is not at head after upgrade!"
+              echo "State: $CURRENT"
               exit 1
             fi
 
