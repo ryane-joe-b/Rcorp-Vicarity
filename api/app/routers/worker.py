@@ -12,7 +12,7 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_worker, get_current_worker_with_complete_profile
 from app.models.user import User
 from app.models.worker_profile import WorkerProfile
-from app.models.job import Job, JobStatus
+from app.models.job import Job, JobStatus, ShiftType
 from app.models.application import Application, ApplicationStatus
 from app.schemas.worker import WorkerProfileUpdate, WorkerProfileResponse
 from app.schemas.job import JobResponse, JobListResponse
@@ -199,16 +199,20 @@ def get_worker_dashboard(
                 break
 
     # --- Recommended jobs ---
+    # Filter to valid ShiftType values only — profile.shift_types may contain stale/mixed-case strings
+    valid_shift_types = {st.value for st in ShiftType}
     recommended_jobs = []
     if profile and profile.shift_types:
-        matched = (
-            db.query(Job)
-            .filter(Job.status == JobStatus.ACTIVE, Job.shift_type.in_(profile.shift_types))
-            .order_by(Job.created_at.desc())
-            .limit(5)
-            .all()
-        )
-        recommended_jobs = matched
+        clean_shift_types = [st for st in profile.shift_types if st in valid_shift_types]
+        if clean_shift_types:
+            matched = (
+                db.query(Job)
+                .filter(Job.status == JobStatus.ACTIVE, Job.shift_type.in_(clean_shift_types))
+                .order_by(Job.created_at.desc())
+                .limit(5)
+                .all()
+            )
+            recommended_jobs = matched
 
     if not recommended_jobs:
         recommended_jobs = (
