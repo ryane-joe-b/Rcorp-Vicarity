@@ -461,7 +461,7 @@ jobs:
     name: Rollback on Failure
     runs-on: ubuntu-latest
     needs: [deploy, verify]
-    if: ${{ failure() && needs.deploy.result == 'success' }}
+    if: false  # Temporarily disabled to observe failure state
     
     steps:
       - name: Rollback deployment
