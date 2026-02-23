@@ -280,9 +280,15 @@ jobs:
             echo "Removing web-static volume for fresh build..."
             docker volume rm vicarity_web-static 2>/dev/null || echo "Volume doesn't exist (first deploy or already removed)"
 
-            # Build all services with no cache
-            echo "Building all services with no cache..."
-            docker compose -f docker-compose.production.yml build --no-cache
+            # Free memory before build: remove dangling images and old build cache
+            # (--no-cache was removed; Docker's layer cache correctly invalidates on COPY . . changes)
+            echo "Pruning dangling images and build cache to free memory..."
+            docker image prune -f || true
+            docker builder prune -f || true
+
+            # Build all services (uses layer cache — invalidated automatically when code changes)
+            echo "Building all services..."
+            docker compose -f docker-compose.production.yml build
 
             # Run database migrations BEFORE starting the API
             # Uses a one-shot container so the API never starts against a stale schema
@@ -426,12 +432,16 @@ jobs:
           
           # Run health check on the server
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'HEALTHCHECK'
-            echo "=== Docker Container Status ==="
-            docker ps --format "table {{.Names}}\t{{.Status}}"
-            
+            echo "=== Docker Container Status (all, including exited) ==="
+            docker ps -a --filter "name=vicarity" --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
+
+            echo ""
+            echo "=== System memory ==="
+            free -h
+
             echo ""
             echo "=== Testing Health Endpoints ==="
-            
+
             # Test API health directly (bypassing nginx redirect)
             cd /home/deploy/vicarity
             API_HEALTH=$(docker compose -f docker-compose.production.yml exec -T api curl -sf http://localhost:8000/health || echo "FAILED")
@@ -440,10 +450,15 @@ jobs:
               echo "$API_HEALTH" | head -c 200
             else
               echo "✗ API health check failed"
-              docker compose -f docker-compose.production.yml logs api --tail=50
+              echo ""
+              echo "=== API logs (last 100 lines) ==="
+              docker compose -f docker-compose.production.yml logs api --tail=100
+              echo ""
+              echo "=== API container inspect (State) ==="
+              docker inspect vicarity-api --format='ExitCode={{.State.ExitCode}} OOMKilled={{.State.OOMKilled}} Status={{.State.Status}} Error={{.State.Error}}' 2>/dev/null || echo "Container not found"
               exit 1
             fi
-            
+
             echo ""
             echo "=== All health checks passed! ==="
           HEALTHCHECK
