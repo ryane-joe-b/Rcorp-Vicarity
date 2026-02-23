@@ -272,7 +272,8 @@ jobs:
             echo "Stopping all services..."
             docker compose -f docker-compose.production.yml down --remove-orphans || true
 
-            # Prune stopped containers to clear any stale container references
+            # Force-remove any remaining project containers by name to clear stale Docker state
+            docker ps -a --filter "name=vicarity" --format "{{.ID}}" | xargs -r docker rm -f || true
             docker container prune -f || true
 
             # Remove web-static volume to force fresh React build
