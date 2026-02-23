@@ -335,11 +335,11 @@ jobs:
             fi
             echo "✅ All containers are running"
             
-            # Check API health with longer timeout
+            # Check API health with longer timeout (directly inside container, bypasses nginx/TLS)
             echo "Checking API health (this may take up to 2 minutes)..."
             RETRIES=30
             while [ $RETRIES -gt 0 ]; do
-              if curl -sf http://localhost/api/health > /dev/null 2>&1; then
+              if docker compose -f docker-compose.production.yml exec -T api curl -sf http://localhost:8000/health > /dev/null 2>&1; then
                 echo "✅ API is healthy!"
                 break
               fi
@@ -347,7 +347,7 @@ jobs:
               RETRIES=$((RETRIES - 1))
               sleep 4
             done
-            
+
             if [ $RETRIES -eq 0 ]; then
               echo "❌ ERROR: API health check failed after 2 minutes!"
               echo ""
@@ -495,7 +495,7 @@ jobs:
             # Wait and verify
             sleep 30
             
-            if curl -sf http://localhost/health > /dev/null 2>&1; then
+            if docker compose -f docker-compose.production.yml exec -T api curl -sf http://localhost:8000/health > /dev/null 2>&1; then
               echo "=== ROLLBACK SUCCESSFUL ==="
             else
               echo "=== ROLLBACK MAY HAVE FAILED - MANUAL INTERVENTION REQUIRED ==="
